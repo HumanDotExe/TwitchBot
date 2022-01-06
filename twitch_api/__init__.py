@@ -4,12 +4,10 @@ import logging
 import pathlib
 from typing import List
 
-from twitchAPI import Twitch, AuthScope, refresh_access_token, AuthType, MissingScopeException, UserAuthenticator, \
-    EventSub, EventSubSubscriptionError
+from twitchAPI import Twitch, AuthScope, AuthType, EventSub, EventSubSubscriptionError
 
 from data_types.stream import Stream
 from twitch_api.event_sub_callbacks import EventSubCallbacks
-from data_types.twitch_bot_config import TwitchBotConfig
 from data_types.types_collection import EventSubType
 
 
@@ -32,25 +30,14 @@ class TwitchAPI:
     def get_twitch_api(cls) -> TwitchAPI:
         return cls.__twitch_api
 
-    @staticmethod
-    def user_refresh(token: str, refresh_token: str):
-        log.debug("User token refreshed")
-        if TwitchBotConfig.get_config() is not None and refresh_token != TwitchBotConfig.get_config()['USER']['REFRESH_TOKEN']:
-            log.debug(f"New token: {refresh_token}")
-            TwitchBotConfig.get_config()['USER']['REFRESH_TOKEN'] = refresh_token
-
-    def __init__(self, client_id: str, client_secret: str, refresh_token: str, monitored_streams: List[str], base_path: pathlib.Path, user_auth_scope: List[AuthScope] = None, app_auth_scope: List[AuthScope] = None):
+    def __init__(self, client_id: str, client_secret: str, monitored_streams: List[str], base_path: pathlib.Path, app_auth_scope: List[AuthScope] = None):
         log.debug("Twitch API Object created")
-        if user_auth_scope is None:
-            user_auth_scope = [AuthScope.BITS_READ, AuthScope.CHANNEL_READ_HYPE_TRAIN, AuthScope.CHANNEL_READ_SUBSCRIPTIONS, AuthScope.CHANNEL_MODERATE]
         if app_auth_scope is None:
             app_auth_scope = [AuthScope.CHANNEL_MODERATE]
         self._client_id = client_id
         self._client_secret = client_secret
-        self._refresh_token = refresh_token
         self._monitored_streams = monitored_streams
         self._app_auth_scope = app_auth_scope
-        self._user_auth_scope = user_auth_scope
         self._base_path = base_path
         self._twitch = None
         self._token = None
@@ -61,21 +48,8 @@ class TwitchAPI:
     def authenticate(self):
         log.info("Authentication started")
         self._twitch = Twitch(self._client_id, self._client_secret)
-        self._twitch.user_auth_refresh_callback = self.user_refresh
         self._twitch.authenticate_app(self._app_auth_scope)
 
-        self._token, self._refresh_token = refresh_access_token(self._refresh_token, self._client_id, self._client_secret)
-
-        try:
-            self._twitch.set_user_authentication(self._token, self._user_auth_scope, self._refresh_token)
-            TwitchAPI.user_refresh(self._token, self._refresh_token)
-        except MissingScopeException:
-            auth = UserAuthenticator(self._twitch, self._user_auth_scope, force_verify=False)
-            self._token, self._refresh_token = auth.authenticate()
-            self._twitch.set_user_authentication(self._token, self._user_auth_scope, self._refresh_token)
-            TwitchAPI.user_refresh(self._token, self._refresh_token)
-
-        log.debug(f"User auth: {self._twitch.has_required_auth(AuthType.USER, [AuthScope.CHANNEL_MODERATE])}")
         log.debug(f"App auth: {self._twitch.has_required_auth(AuthType.APP, [AuthScope.CHANNEL_MODERATE])}")
 
     def collect_stream_info(self):
