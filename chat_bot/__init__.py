@@ -23,7 +23,7 @@ class ChatBot(commands.Bot):
     def get_bot(cls) -> ChatBot:
         return cls.__bot
 
-    def __init__(self, username: str, oauth: str, api_token: str, prefix: str = "!"):
+    def __init__(self, username: str, oauth: str, prefix: str = "!"):
         log.debug("Bot Object created")
         streams = Stream.get_streams()
         self._channels = [stream.streamer for stream in streams if stream.enable_chat_bot]
@@ -65,6 +65,3 @@ class ChatBot(commands.Bot):
         stream.write_into_chatlog(message.author.display_name, message.content)
         log.info(f"{message.channel.name} -> {message.author.display_name}: {message.content}")
         await self.handle_commands(message)
-
-
-

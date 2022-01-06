@@ -26,7 +26,7 @@ def startup():
     TwitchAPI.get_twitch_api().setup_event_subs(config['GENERAL']['TWITCH_CALLBACK_URL'], config['GENERAL'].getint('TWITCH_CALLBACK_PORT'))
 
     log.info("Setting up bot")
-    ChatBot.set_bot(ChatBot(config['BOT']['NICK'], config['BOT']['CHAT_OAUTH'], config['APP']['CLIENT_SECRET']))
+    ChatBot.set_bot(ChatBot(config['BOT']['NICK'], config['BOT']['CHAT_OAUTH']))
     # asyncio.ensure_future(_bot.start())
     asyncio.ensure_future(ChatBot.get_bot().start_chat_bot())
 

@@ -38,18 +38,6 @@ class ModCommands(CustomCog):
             else:
                 await ctx.send("You don't have permission to do this!")
 
-    @commands.command(name="ban")
-    async def ban(self, ctx: commands.Context, user: str = None):
-        stream = Stream.get_stream(ctx.channel.name)
-        if ctx.command.name not in stream.ignore_commands and user is not None and ctx.author.is_mod:
-            for stream in Stream.get_streams():
-                if stream.ban_all:
-                    channel = self.bot.get_channel(stream.streamer)
-                    if channel:
-                        bot_user = channel.get_chatter(self.bot.nick)
-                        if bot_user.is_mod:
-                            await channel.send(f"/ban {user}")
-
     @commands.command(name="reload")
     async def reload(self, ctx: commands.Context):
         if ctx.author.is_mod:
