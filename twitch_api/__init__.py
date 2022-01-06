@@ -83,7 +83,7 @@ class TwitchAPI:
         stream_info = self._twitch.get_streams(user_login=self._monitored_streams)
 
         for info in stream_info['data']:
-            stream = Stream(info['user_name'], info['id'])
+            stream = Stream(info['user_name'], info['id'], self._base_path)
             stream.stream_started(info['started_at'])
             stream.stream_info_changed(info['title'], info['game_name'], info['is_mature'], info['language'])
             Stream.add_stream(stream)
@@ -107,11 +107,11 @@ class TwitchAPI:
                 stream.set_callback_id(self._event_sub_hook.listen_stream_offline(stream.user_id, EventSubCallbacks.on_stream_offline), EventSubType.STREAM_OFFLINE)
                 stream.set_callback_id(self._event_sub_hook.listen_channel_update(stream.user_id, EventSubCallbacks.on_channel_update), EventSubType.CHANNEL_UPDATE)
                 stream.set_callback_id(self._event_sub_hook.listen_channel_follow(stream.user_id, EventSubCallbacks.on_channel_follow), EventSubType.CHANNEL_FOLLOW)
-            except EventSubSubscriptionError as e:
+            except EventSubSubscriptionError:
                 log.warning(f"Something went wrong here: No auth for {stream.streamer}.")
             try:
                 stream.set_callback_id(self._event_sub_hook.listen_channel_ban(stream.user_id, EventSubCallbacks.on_ban), EventSubType.CHANNEL_BAN)
-            except EventSubSubscriptionError as e:
+            except EventSubSubscriptionError:
                 log.warning(f"{stream.streamer} does not have the app authorized.")
 
     def stop_twitch_api(self):
@@ -119,5 +119,3 @@ class TwitchAPI:
         if self._event_sub_hook:
             self._event_sub_hook.stop()
             log.debug("EventSub stopped")
-
-
