@@ -52,6 +52,5 @@ def exit_handler(signal_number: int, _: FrameType):
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, exit_handler)
     signal.signal(signal.SIGTERM, exit_handler)
-    log.info(signal_to_name)
     startup()
     asyncio.get_event_loop().run_forever()

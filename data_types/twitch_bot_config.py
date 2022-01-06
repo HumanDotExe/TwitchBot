@@ -60,9 +60,6 @@ class TwitchBotConfig(ConfigParser):
                 'client_id': None,
                 'client_secret': None
             },
-            'USER': {
-                'refresh_token': None
-            },
             'BOT': {
                 'nick': None,
                 'prefix': None,

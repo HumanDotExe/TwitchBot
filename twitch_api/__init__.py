@@ -50,8 +50,6 @@ class TwitchAPI:
         self._twitch = Twitch(self._client_id, self._client_secret)
         self._twitch.authenticate_app(self._app_auth_scope)
 
-        log.debug(f"App auth: {self._twitch.has_required_auth(AuthType.APP, [AuthScope.CHANNEL_MODERATE])}")
-
     def collect_stream_info(self):
         log.info("Collecting User Info and Stream Data for monitored streams")
         stream_info = self._twitch.get_streams(user_login=self._monitored_streams)
