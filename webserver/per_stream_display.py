@@ -57,3 +57,18 @@ async def display_notifications(request: Request):
             stream.decrease_cooldown()
         return web.Response(text=response_html, content_type='text/html')
     return web.Response(text="Error")
+
+
+async def display_chat_messages(request: Request):
+    if request.query_string in Stream.get_channels():
+        stream = Stream.get_stream(request.query_string)
+        content = "<div id='chat' width=500px style='{word-break: break-word;}'>"
+
+        for message in stream.chat_messages:
+            content += f"<p id='chat_message'>{message.chat_message}</p>"
+            message.decrease_time_left()
+            if message.time_left == 0:
+                stream.remove_chat_message(message)
+        content += "</div>"
+        return web.Response(text=default_html.format(refresh=5, content=content), content_type='text/html')
+    return web.Response(text="Error")

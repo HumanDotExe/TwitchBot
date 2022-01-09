@@ -63,5 +63,6 @@ class ChatBot(commands.Bot):
             log.info(f"{message.channel.name} -> {self.display_nick}: {message.content}")
             return
         stream.write_into_chatlog(message.author.display_name, message.content)
+        stream.add_chat_message(message.content, message.tags)
         log.info(f"{message.channel.name} -> {message.author.display_name}: {message.content}")
         await self.handle_commands(message)

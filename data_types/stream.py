@@ -6,6 +6,7 @@ import logging
 import pathlib
 from typing import Union, List
 
+from data_types.chat_message import ChatMessage
 from data_types.notification_resource import NotificationResource
 from data_types.types_collection import NotificationType, EventSubType
 
@@ -54,6 +55,8 @@ class Stream:
         self.__notification_cooldown = None
         self.__notifications = {}
         self.commands = {}
+
+        self.__chat_messages = []
 
         self.__stream_start = None
         self.__current_cooldown = 0
@@ -172,6 +175,12 @@ class Stream:
                 time = datetime.datetime.now().time().isoformat()
                 f.write(f"{time}:{user}: {message}\n")
 
+    def add_chat_message(self, message: str, tags: dict):
+        self.__chat_messages.append(ChatMessage(message, tags))
+
+    def remove_chat_message(self, message: ChatMessage):
+        self.__chat_messages.remove(message)
+
     @property
     def current_cooldown(self):
         return self.__current_cooldown
@@ -193,3 +202,7 @@ class Stream:
         if self.__is_streaming:
             return datetime.datetime.utcnow() - self.__stream_start
         return None
+
+    @property
+    def chat_messages(self):
+        return self.__chat_messages

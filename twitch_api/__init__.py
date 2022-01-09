@@ -67,6 +67,14 @@ class TwitchAPI:
                 stream = Stream(info['display_name'], info['id'], self._base_path)
                 Stream.add_stream(stream)
 
+    def get_global_chat_emotes(self):
+        log.info("Retrieving chat emotes")
+        return self._twitch.get_global_emotes()
+
+    def get_global_chat_badges(self):
+        log.info("Retrieving Badges")
+        return self._twitch.get_global_chat_badges()
+
     def setup_event_subs(self, callback_url: str, callback_port: int):
         log.info("Setting up webhooks")
         self._event_sub_hook = EventSub(callback_url, self._client_id, callback_port, self._twitch)

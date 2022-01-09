@@ -5,7 +5,7 @@ import logging
 from aiohttp import web
 
 from webserver.independent_display import display_time
-from webserver.per_stream_display import display_uptime, display_notifications
+from webserver.per_stream_display import display_uptime, display_notifications, display_chat_messages
 
 log = logging.getLogger(__name__)
 
@@ -27,7 +27,8 @@ class Webserver:
         self._app = web.Application()
         self._app.add_routes([web.get(path + "/time" + '{tail:.*}', display_time),
                               web.get(path + "/uptime" + '{tail:.*}', display_uptime),
-                              web.get(path + "/notifications" + '{tail:.*}', display_notifications)])
+                              web.get(path + "/notifications" + '{tail:.*}', display_notifications),
+                              web.get(path + "/chat" + '{tail:.*}', display_chat_messages)])
         self._runner = web.AppRunner(self._app)
         self._site = None
 
