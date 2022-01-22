@@ -64,7 +64,7 @@ async def display_chat_messages(request: Request):
         content = "<div id='chat' width=500px style='{word-break: break-word;}'>"
 
         for message in stream.chat_messages:
-            if message.decrease_time_left > 0:
+            if message.time_left > 0:
                 content += f"<p id='chat_message'>{message.chat_message}</p>"
                 message.decrease_time_left()
             else:
