@@ -4,7 +4,7 @@ import logging
 import pathlib
 from typing import List
 
-from twitchAPI import Twitch, AuthScope, AuthType, EventSub, EventSubSubscriptionError
+from twitchAPI import Twitch, AuthScope, EventSub, EventSubSubscriptionError
 
 from data_types.stream import Stream
 from twitch_api.event_sub_callbacks import EventSubCallbacks

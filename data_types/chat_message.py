@@ -17,12 +17,12 @@ class ChatMessage:
                 versions[version['id']] = {k: version[k] for k in set(list(version.keys())) - {"id"}}
             cls.__global_badges[badge['set_id']] = versions
 
-    def __init__(self, message: str, tags: dict):
+    def __init__(self, message: str, time: int, tags: dict):
         self.__user = tags['display-name']
         self.__user_with_badges = self.format_user(tags)
         self.__message = message
         self.__message_with_emotes = self.replace_twitch_emotes(message, tags)
-        self.__time = 60
+        self.__time = time
 
     @property
     def time_left(self):

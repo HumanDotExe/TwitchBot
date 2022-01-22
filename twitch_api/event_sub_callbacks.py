@@ -41,7 +41,7 @@ class EventSubCallbacks:
                 reason = f"{reason}: {data['event']['reason']}"
             bot = ChatBot.get_bot()
             for s in Stream.get_streams():
-                if stream.streamer is not s.streamer and s.ban_all:
+                if stream.streamer is not s.streamer and s.config['sync-bans']:
                     channel = bot.get_channel(s.streamer.lower())
                     if channel and channel.get_chatter(bot.nick).is_mod:
                         log.info(f"Banning {ban_user} in channel {s.streamer} for {reason}")

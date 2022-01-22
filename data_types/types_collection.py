@@ -2,9 +2,8 @@ from enum import Enum
 
 
 class NotificationType(Enum):
-    SUB = ["sub", "subs", "subscription"]
-    FOLLOW = ["follow", "follows", "follower"]
-    TEST = ["test"]
+    SUB = "subscription"
+    FOLLOW = "follow"
 
 
 class EventSubType(Enum):

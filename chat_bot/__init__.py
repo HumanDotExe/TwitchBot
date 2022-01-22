@@ -26,7 +26,7 @@ class ChatBot(commands.Bot):
     def __init__(self, username: str, oauth: str, prefix: str = "!"):
         log.debug("Bot Object created")
         streams = Stream.get_streams()
-        self._channels = [stream.streamer for stream in streams if stream.enable_chat_bot]
+        self._channels = [stream.streamer for stream in streams if stream.config['chat-bot']['save-chatlog']]
         self._prefix = prefix
         self.display_nick = username
         super().__init__(
@@ -50,19 +50,30 @@ class ChatBot(commands.Bot):
         log.debug("ChatBot stopped")
 
     async def event_ready(self):
-        for streamer in Stream.get_channels():
-            channel = self.get_channel(streamer)
+        for stream in Stream.get_streams():
+            channel = self.get_channel(stream.streamer)
             if channel:
-                await channel.send(f"{self.display_nick} online!")
+                await channel.send(stream.config['chat-bot']['online-message'])
         log.info(f'{self.display_nick} online!')
 
     async def event_message(self, message):
         stream = Stream.get_stream(message.channel.name)
         if message.echo:
+            if stream.config['stream-overlays']['chat']['include-command-output']:
+                chatter = message.channel.get_chatter(self.display_nick)
+                badges = ""
+                for key, value in chatter.badges.items():
+                    badges += f"{key}/{value}"
+                tags = {'badges': badges, 'display-name': chatter.display_name, 'color': chatter.color, 'emotes': ''}
+                stream.add_chat_message(message.content, tags)
             stream.write_into_chatlog(self.display_nick, message.content)
             log.info(f"{message.channel.name} -> {self.display_nick}: {message.content}")
             return
         stream.write_into_chatlog(message.author.display_name, message.content)
-        stream.add_chat_message(message.content, message.tags)
+        if message.content[0] == self._prefix:
+            if stream.config['stream-overlays']['chat']['include-commands']:
+                stream.add_chat_message(message.content, message.tags)
+        else:
+            stream.add_chat_message(message.content, message.tags)
         log.info(f"{message.channel.name} -> {message.author.display_name}: {message.content}")
         await self.handle_commands(message)

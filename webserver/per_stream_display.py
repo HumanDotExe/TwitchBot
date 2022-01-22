@@ -1,4 +1,3 @@
-import datetime
 import logging
 
 from aiohttp import web
@@ -65,9 +64,10 @@ async def display_chat_messages(request: Request):
         content = "<div id='chat' width=500px style='{word-break: break-word;}'>"
 
         for message in stream.chat_messages:
-            content += f"<p id='chat_message'>{message.chat_message}</p>"
-            message.decrease_time_left()
-            if message.time_left == 0:
+            if message.decrease_time_left > 0:
+                content += f"<p id='chat_message'>{message.chat_message}</p>"
+                message.decrease_time_left()
+            else:
                 stream.remove_chat_message(message)
         content += "</div>"
         return web.Response(text=default_html.format(refresh=5, content=content), content_type='text/html')

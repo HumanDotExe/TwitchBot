@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import configparser
 import datetime
 import logging
 import pathlib
@@ -8,6 +7,7 @@ from typing import Union, List
 
 from data_types.chat_message import ChatMessage
 from data_types.notification_resource import NotificationResource
+from data_types.per_stream_config import PerStreamConfig
 from data_types.types_collection import NotificationType, EventSubType
 
 log = logging.getLogger(__name__)
@@ -36,6 +36,7 @@ class Stream:
         return [stream for stream in cls.__streams.values()]
 
     def __init__(self, streamer: str, user_id: str, base_path: pathlib.Path):
+        self.chat_overlay_settings = None
         self.streamer = streamer
         self.user_id = user_id
 
@@ -45,14 +46,7 @@ class Stream:
         self.__is_mature = None
         self.__language = None
 
-        self.__config = None
-        self.enable_webserver = None
-        self.enable_chat_bot = None
-        self.ban_all = None
-        self.block_notifications_from = []
-        self.ignore_commands = []
-        self.save_chatlog = None
-        self.__notification_cooldown = None
+        self.config = None
         self.__notifications = {}
         self.commands = {}
 
@@ -73,56 +67,33 @@ class Stream:
         log.info(f"Loading Stream resources for {self.streamer}")
 
         self.__notifications = {}
-        self.__notification_cooldown = 3
 
-        config_path = self.paths["stream"] / "config.ini"
-        self.__config = configparser.ConfigParser()
+        config_path = self.paths["stream"] / "config.yaml"
         if config_path.is_file():
             log.debug(f"Config file found")
-            self.__config.read(config_path)
+            self.config = PerStreamConfig.load_config(config_path)
         else:
             log.debug(f"Using default stream config")
-            self.__config.read(self.paths["base"] / "default.ini")
+            self.config = PerStreamConfig.load_config(self.paths["base"] / "default.yaml")
 
-        general = "GENERAL"
-        if self.__config.has_section(general):
-            self.ban_all = self.__config[general].getboolean("ban-all", fallback=False)
-            self.enable_chat_bot = self.__config[general].getboolean("enable-chat-bot", fallback=False)
-            self.enable_webserver = self.__config[general].getboolean("enable-webserver", fallback=False)
+        self.__setup_notifications()
 
-        notifications = "NOTIFICATIONS"
-        if self.enable_webserver:
-            if self.__config.has_section(notifications):
-                self.__notification_cooldown = self.__config[general].getint("cooldown", fallback=3)
-                self.block_notifications_from = self.__config[notifications].get("block", fallback="").split(" ")
-                self.__setup_notifications()
-
-        chat = "CHAT"
-        if self.enable_chat_bot and self.__config.has_section(chat):
-            self.ignore_commands = []
-            ignore = self.__config[chat].get("ignore-commands", fallback="")
-            self.ignore_commands.extend(ignore.split(" "))
-            if "save-chatlog" in self.__config[chat].keys():
-                self.save_chatlog = self.__config[chat].getboolean("save-chatlog", fallback=False)
-            if self.save_chatlog:
+        if self.config['chat-bot']['enabled']:
+            if self.config['chat-bot']['save-chatlog']:
                 self.paths["chatlog"] = self.paths["stream"] / "logs"
                 self.paths["chatlog"].mkdir(parents=True, exist_ok=True)
             self.__setup_custom_commands()
 
     def __setup_notifications(self):
-        messages = "MESSAGES"
-        images = "IMAGES"
-        sounds = "SOUNDS"
+        notifications = self.config['stream-overlays']['notifications']
         for notification_type in NotificationType:
             self.__notifications[notification_type] = NotificationResource(notification_type)
-            if self.__config.has_section(messages):
-                self.__notifications[notification_type].set_message(
-                    self.__config[messages].get(notification_type.value[0], fallback="Thanks {name}!"))
-            if self.__config.has_section(images):
-                image_name = self.__config[images].get(notification_type.value[0], fallback=None)
+            self.__notifications[notification_type].set_message(notifications[notification_type.value]['message'])
+            image_name = notifications[notification_type.value]['image']
+            if image_name:
                 self.__notifications[notification_type].set_image(image_name, self.paths["resources"])
-            if self.__config.has_section(sounds):
-                sound_name = self.__config[sounds].get(notification_type.value[0], fallback=None)
+            sound_name = notifications[notification_type.value]['sound']
+            if sound_name:
                 self.__notifications[notification_type].set_sound(sound_name, self.paths["resources"])
 
     def __setup_custom_commands(self):
@@ -151,7 +122,7 @@ class Stream:
         return self.active_callbacks[topic]
 
     def add_to_queue(self, name: str, notification_type: NotificationType):
-        for entry in self.block_notifications_from:
+        for entry in self.config['stream-overlays']['notifications']['block']:
             if entry in name and name not in self.ban_queue:
                 self.ban_queue.append(name)
         if name not in self.ban_queue:
@@ -166,17 +137,23 @@ class Stream:
             self.__current_cooldown = self.__current_cooldown - 1
 
     def reset_cooldown(self):
-        self.__current_cooldown = self.__notification_cooldown
+        self.__current_cooldown = self.config['stream-overlays']['notifications']['cooldown']
 
     def write_into_chatlog(self, user: str, message: str):
-        if self.save_chatlog:
+        if self.config['chat-bot']['save-chatlog']:
             filename = self.paths["chatlog"] / f"chatlog_{datetime.datetime.now().date().isoformat()}.txt"
             with open(filename, "a+") as f:
                 time = datetime.datetime.now().time().isoformat()
                 f.write(f"{time}:{user}: {message}\n")
 
     def add_chat_message(self, message: str, tags: dict):
-        self.__chat_messages.append(ChatMessage(message, tags))
+        self.__chat_messages.append(ChatMessage(message, self.config['stream-overlays']['chat']['message-stays-for'], tags))
+        difference = len(self.__chat_messages) - self.config['stream-overlays']['chat']['max-number-of-messages']
+        log.debug(f"Nr messages before: {len(self.__chat_messages)}, max chat messages: {self.config['stream-overlays']['chat']['max-number-of-messages']}, difference: {difference}")
+        if difference > 0:
+            for i in range(0, difference):
+                self.__chat_messages.pop(0)
+        log.debug(f"Nr messages after: {len(self.__chat_messages)}")
 
     def remove_chat_message(self, message: ChatMessage):
         self.__chat_messages.remove(message)

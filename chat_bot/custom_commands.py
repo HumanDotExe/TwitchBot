@@ -41,7 +41,7 @@ class CustomCommands(CustomCog):
     @staticmethod
     async def display_command(ctx: commands.Context):
         stream = Stream.get_stream(ctx.channel.name)
-        if ctx.command.name in stream.commands.keys():
+        if ctx.command.name in stream.commands.keys() and ctx.command.name not in stream.config['chat-bot']['ignore-commands']:
             await ctx.send(stream.commands[ctx.command.name])
 
 

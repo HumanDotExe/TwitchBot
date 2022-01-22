@@ -24,9 +24,9 @@ class ModCommands(CustomCog):
     @commands.command(name="test")
     async def test(self, ctx: commands.Context, notify_type: str = "test", name: str = None):
         stream = Stream.get_stream(ctx.channel.name)
-        if ctx.command.name not in stream.ignore_commands:
+        if ctx.command.name not in stream.config['chat-bot']['ignore-commands']:
             if ctx.author.is_mod:
-                notification_type = NotificationType.TEST
+                notification_type = NotificationType.FOLLOW
                 if name is None:
                     name = "TestUser"
                 if notify_type in NotificationType.SUB.value:

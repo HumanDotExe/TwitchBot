@@ -22,7 +22,7 @@ class BaseCommands(CustomCog):
     @commands.command(name='uptime')
     async def uptime(self, ctx: commands.Context):
         stream = Stream.get_stream(ctx.channel.name)
-        if ctx.command.name not in stream.ignore_commands:
+        if ctx.command.name not in stream.config['chat-bot']['ignore-commands']:
             uptime = stream.uptime
             if uptime:
                 delta = timedelta.format_timedelta(uptime)
@@ -39,7 +39,7 @@ class BaseCommands(CustomCog):
     @commands.command(name="game")
     async def game(self, ctx: commands.Context):
         stream = Stream.get_stream(ctx.channel.name)
-        if ctx.command.name not in stream.ignore_commands:
+        if ctx.command.name not in stream.config['chat-bot']['ignore-commands']:
             game = stream.game
             if game:
                 message = f"{stream.streamer} is currently playing {game}."
@@ -50,7 +50,7 @@ class BaseCommands(CustomCog):
     @commands.command(name="title")
     async def title(self, ctx: commands.Context):
         stream = Stream.get_stream(ctx.channel.name)
-        if ctx.command.name not in stream.ignore_commands:
+        if ctx.command.name not in stream.config['chat-bot']['ignore-commands']:
             title = stream.title
             if title:
                 message = f"The stream title is '{title}'."
@@ -61,7 +61,7 @@ class BaseCommands(CustomCog):
     @commands.command(name="lurk")
     async def lurk(self, ctx: commands.Context):
         stream = Stream.get_stream(ctx.channel.name)
-        if ctx.command.name not in stream.ignore_commands:
+        if ctx.command.name not in stream.config['chat-bot']['ignore-commands']:
             if stream.is_live:
                 message = f"{ctx.author.display_name} has decided to lurk. Have fun!"
             else:
@@ -71,7 +71,7 @@ class BaseCommands(CustomCog):
     @commands.command(name="unlurk")
     async def unlurk(self, ctx: commands.Context):
         stream = Stream.get_stream(ctx.channel.name)
-        if ctx.command.name not in stream.ignore_commands:
+        if ctx.command.name not in stream.config['chat-bot']['ignore-commands']:
             message = f"{ctx.author.display_name} is trapped in lurking forever. There is no way to unlurk, you are trapped here now!"
             await ctx.send(message)
 
