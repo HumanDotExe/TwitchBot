@@ -1,0 +1,21 @@
+sync-bans: False
+
+chat-bot:
+  enabled: True
+  save-chatlog: True
+  online-message: "HumanDotExe online!"
+  ignore-commands: []
+
+stream-overlays:
+  notifications:
+    cooldown: 3
+    block: []
+    follow:
+      message: "Thanks for the follow {name}"
+    subscription:
+      message: "Thanks for the sub {name}"
+  chat:
+    include-commands: False
+    include-command-output: False
+    message-stays-for: 60
+    max-number-of-messages: 10
