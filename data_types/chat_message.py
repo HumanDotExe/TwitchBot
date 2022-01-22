@@ -20,8 +20,9 @@ class ChatMessage:
     def __init__(self, message: str, time: int, tags: dict):
         self.__user = tags['display-name']
         self.__user_with_badges = self.format_user(tags)
-        self.__message = message
-        self.__message_with_emotes = self.replace_twitch_emotes(message, tags)
+        self.__type = 'NORMAL'
+        self.__message = self.format_message(message)
+        self.__message_with_emotes = self.replace_twitch_emotes(self.__message, tags)
         self.__time = time
 
     @property
@@ -33,7 +34,16 @@ class ChatMessage:
 
     @property
     def chat_message(self):
+        if self.__type == 'COMMAND':
+            return f"{self.__user_with_badges} <i>{self.__message_with_emotes}</i>"
         return f"{self.__user_with_badges}: {self.__message_with_emotes}"
+
+    def format_message(self, message: str):
+        if 'ACTION' in message:
+            message = message.replace('ACTION ', '')
+            message = message.replace('', '')
+            self.__type = 'COMMAND'
+        return message
 
     @classmethod
     def format_user(cls, tags):

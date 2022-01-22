@@ -63,11 +63,14 @@ class ChatBot(commands.Bot):
                 chatter = message.channel.get_chatter(self.display_nick)
                 badges = ""
                 for key, value in chatter.badges.items():
-                    badges += f"{key}/{value}"
+                    if len(badges) == 0:
+                        badges += f"{key}/{value}"
+                    else:
+                        badges += f",{key}/{value}"
                 tags = {'badges': badges, 'display-name': chatter.display_name, 'color': chatter.color, 'emotes': ''}
                 stream.add_chat_message(message.content, tags)
             stream.write_into_chatlog(self.display_nick, message.content)
-            log.info(f"{message.channel.name} -> {self.display_nick}: {message.content}")
+            log.debug(f"{message.channel.name} -> {self.display_nick}: {message.content}")
             return
         stream.write_into_chatlog(message.author.display_name, message.content)
         if message.content[0] == self._prefix:
@@ -75,5 +78,5 @@ class ChatBot(commands.Bot):
                 stream.add_chat_message(message.content, message.tags)
         else:
             stream.add_chat_message(message.content, message.tags)
-        log.info(f"{message.channel.name} -> {message.author.display_name}: {message.content}")
+        log.debug(f"{message.channel.name} -> {message.author.display_name}: {message.content}")
         await self.handle_commands(message)
