@@ -87,7 +87,6 @@ class Stream:
     def __setup_notifications(self):
         notifications = self.config['stream-overlays']['notifications']
         for notification_type in NotificationType:
-            log.debug(f"Config: {notifications}, resource path: {self.paths['resources']}")
             self.__notifications[notification_type] = NotificationResource(notification_type)
             self.__notifications[notification_type].set_message(notifications[notification_type.value]['message'])
             image_name = notifications[notification_type.value]['image']

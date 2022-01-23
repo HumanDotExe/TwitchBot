@@ -1,8 +1,11 @@
 import base64
+import logging
 import mimetypes
 import pathlib
 
 from data_types.types_collection import NotificationType
+
+log = logging.getLogger(__name__)
 
 
 class NotificationResource:
@@ -52,6 +55,7 @@ class NotificationResource:
 
     def set_sound(self, sound_name, resource_path: pathlib.Path):
         sound_path = resource_path / sound_name
+        log.debug(f"sound path: {sound_path}")
         if sound_path.is_file() and sound_path.suffix.lower() in NotificationResource.audio_formats:
             sound_mimetype = mimetypes.guess_type(sound_path)[0]
             if sound_mimetype:
