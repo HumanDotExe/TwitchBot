@@ -64,7 +64,7 @@ class ChatBot(commands.Bot):
                 self._bot_tags[stream.streamer] = {'badges': badges, 'display-name': chatter.display_name,
                                                    'color': stream.config['chat-bot']['bot-color'], 'emotes': ''}
             if channel:
-                await channel.send(stream.config['chat-bot']['online-message'])
+                await channel.send(stream.config['chat-bot']['online-message'].format(bot_name=self.display_nick))
         log.info(f'{self.display_nick} online!')
 
     async def event_message(self, message):
