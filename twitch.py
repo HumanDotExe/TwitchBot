@@ -23,7 +23,7 @@ def startup():
     TwitchBotConfig.set_config(config)
 
     base_path = pathlib.Path(__file__).resolve().parent / config['GENERAL']['BASE_FOLDER_NAME']
-    log.debug(base_path)
+    log.debug(f"Base path: {base_path}")
     TwitchAPI.set_twitch_api(TwitchAPI(config['APP']['CLIENT_ID'], config['APP']['CLIENT_SECRET'], config['GENERAL']['MONITOR_STREAMS'].split(" "), base_path))
     TwitchAPI.get_twitch_api().setup_event_subs(config['GENERAL']['TWITCH_CALLBACK_URL'], config['GENERAL'].getint('TWITCH_CALLBACK_PORT'))
     ChatMessage.set_global_emotes(TwitchAPI.get_twitch_api().get_global_chat_emotes())
