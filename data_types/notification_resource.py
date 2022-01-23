@@ -58,6 +58,7 @@ class NotificationResource:
         log.debug(f"sound path: {sound_path}")
         if sound_path.is_file() and sound_path.suffix.lower() in NotificationResource.audio_formats:
             sound_mimetype = mimetypes.guess_type(str(sound_path))[0]
+            log.debug(f"Sound mimetype: {sound_mimetype}")
             if sound_mimetype:
                 self._sound = base64.b64encode(open(sound_path, 'rb').read()).decode('utf-8')
                 self._sound_mime = sound_mimetype
