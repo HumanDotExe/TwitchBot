@@ -53,25 +53,30 @@ class ChatBot(commands.Bot):
     async def event_ready(self):
         for stream in Stream.get_streams():
             channel = self.get_channel(stream.streamer)
-            if stream.streamer not in self._bot_tags:
-                chatter = channel.get_chatter(self.display_nick)
-                badges = ""
-                for key, value in chatter.badges.items():
-                    if len(badges) == 0:
-                        badges += f"{key}/{value}"
-                    else:
-                        badges += f",{key}/{value}"
-                self._bot_tags[stream.streamer] = {'badges': badges, 'display-name': chatter.display_name,
-                                                   'color': stream.config['chat-bot']['bot-color'], 'emotes': ''}
             if channel:
                 await channel.send(stream.config['chat-bot']['online-message'].format(bot_name=self.display_nick))
         log.info(f'{self.display_nick} online!')
+
+    async def create_bot_tag_for_stream(self, stream: Stream, channel):
+        chatter = channel.get_chatter(self.display_nick)
+        if chatter is not None:
+            badges = ""
+            for key, value in chatter.badges.items():
+                if len(badges) == 0:
+                    badges += f"{key}/{value}"
+                else:
+                    badges += f",{key}/{value}"
+            self._bot_tags[stream.streamer] = {'badges': badges, 'display-name': chatter.display_name,
+                                               'color': stream.config['chat-bot']['bot-color'], 'emotes': ''}
 
     async def event_message(self, message):
         stream = Stream.get_stream(message.channel.name)
         if message.echo:
             if stream.config['stream-overlays']['chat']['include-command-output']:
-                stream.add_chat_message(message.content, self._bot_tags[stream.streamer])
+                if stream.streamer not in self._bot_tags:
+                    await self.create_bot_tag_for_stream(stream, message.channel)
+                if stream.streamer in self._bot_tags:
+                    stream.add_chat_message(message.content, self._bot_tags[stream.streamer])
             stream.write_into_chatlog(self.display_nick, message.content)
             log.debug(f"{message.channel.name} -> {self.display_nick}: {message.content}")
             return
