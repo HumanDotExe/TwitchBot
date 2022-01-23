@@ -18,4 +18,5 @@ stream-overlays:
     include-commands: False
     include-command-output: False
     message-stays-for: 60
+    message-refresh-rate: 5
     max-number-of-messages: 10

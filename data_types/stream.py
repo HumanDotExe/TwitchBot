@@ -147,7 +147,7 @@ class Stream:
                 f.write(f"{time}:{user}: {message}\n")
 
     def add_chat_message(self, message: str, tags: dict):
-        self.__chat_messages.append(ChatMessage(message, self.config['stream-overlays']['chat']['message-stays-for'], tags))
+        self.__chat_messages.append(ChatMessage(message, self.config['stream-overlays']['chat']['message-stays-for'], self.config['stream-overlays']['chat']['message-refresh-rate'], tags))
         difference = len(self.__chat_messages) - self.config['stream-overlays']['chat']['max-number-of-messages']
         log.debug(f"Nr messages before: {len(self.__chat_messages)}, max chat messages: {self.config['stream-overlays']['chat']['max-number-of-messages']}, difference: {difference}")
         if difference > 0:

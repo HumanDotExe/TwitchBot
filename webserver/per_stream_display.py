@@ -70,5 +70,5 @@ async def display_chat_messages(request: Request):
             else:
                 stream.remove_chat_message(message)
         content += "</div>"
-        return web.Response(text=default_html.format(refresh=5, content=content), content_type='text/html')
+        return web.Response(text=default_html.format(refresh=stream.config['stream-overlays']['chat']['message-refresh-rate'], content=content), content_type='text/html')
     return web.Response(text="Error")

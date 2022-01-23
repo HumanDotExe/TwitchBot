@@ -41,6 +41,7 @@ class PerStreamConfig:
                     'include-commands': And(bool),
                     'include-command-output': And(bool),
                     'message-stays-for': And(int),
+                    'message-refresh-rate': And(int),
                     'max-number-of-messages': And(int)
                 }
             }
@@ -68,6 +69,7 @@ class PerStreamConfig:
         include-commands: False
         include-command-output: False
         message-stays-for: 60
+        message-refresh-rate: 5
         max-number-of-messages: 10
     """
 
