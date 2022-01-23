@@ -1,0 +1,5 @@
+twitchAPI~=2.5.1
+twitchio~=2.1.4
+aiohttp~=3.7.4.post0
+PyYAML~=6.0
+schema~=0.7.5
