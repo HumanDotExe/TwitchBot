@@ -45,8 +45,16 @@ class ChatBot(commands.Bot):
         await self.connect()
         log.debug("ChatBot started")
 
+    async def send_chat_message_on_stop(self):
+        for channel in self.connected_channels:
+            stream = Stream.get_stream(channel.name)
+            offline_message = stream.config['chat-bot']['offline-message'].format(bot_name=self.display_nick)
+            if len(offline_message) > 0:
+                await channel.send(offline_message)
+
     async def stop_chat_bot(self):
         log.info("Stopping ChatBot")
+        await self.send_chat_message_on_stop()
         await self.close()
         log.debug("ChatBot stopped")
 

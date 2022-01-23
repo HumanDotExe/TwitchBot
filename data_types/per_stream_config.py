@@ -21,6 +21,7 @@ class PerStreamConfig:
                     'save-chatlog': And(bool),
                     Optional('bot-color', default="#FFFFFF"): And(str),
                     'online-message': And(str),
+                    Optional('offline-message', default=""): And(str),
                     Optional('ignore-commands', default=[]): And(list)
                 },
             'stream-overlays': {
