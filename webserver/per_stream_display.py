@@ -12,8 +12,8 @@ default_html = "<html><head><meta charset=\"UTF-8\"/><meta http-equiv=\"refresh\
 
 
 async def display_uptime(request: Request):
-    if request.rel_url.query['stream'] in Stream.get_channels():
-        stream = Stream.get_stream(request.rel_url.query['stream'])
+    if request.rel_url.query.get('stream', '') in Stream.get_channels():
+        stream = Stream.get_stream(request.rel_url.query.get('stream', ''))
         uptime = stream.uptime
         if uptime:
             delta = timedelta.format_timedelta(uptime)
@@ -32,8 +32,8 @@ async def display_uptime(request: Request):
 
 
 async def display_notifications(request: Request):
-    if request.rel_url.query['stream'] in Stream.get_channels():
-        stream = Stream.get_stream(request.rel_url.query['stream'])
+    if request.rel_url.query.get('stream', '') in Stream.get_channels():
+        stream = Stream.get_stream(request.rel_url.query.get('stream', ''))
         if len(stream.queue) > 0 and stream.current_cooldown == 0:
             content = "<div id='queue_display'>"
             name, notification_type = stream.queue.pop()
@@ -59,16 +59,15 @@ async def display_notifications(request: Request):
 
 
 async def display_chat_messages(request: Request):
-    if request.rel_url.query['stream'] in Stream.get_channels():
-        stream = Stream.get_stream(request.rel_url.query['stream'])
+    if request.rel_url.query.get('stream', '') in Stream.get_channels():
+        stream = Stream.get_stream(request.rel_url.query.get('stream', ''))
         content = "<div id='chat' width=500px style='{word-break: break-word;}'>"
 
         message_number = stream.config['stream-overlays']['chat']['max-number-of-messages']
-        if 'count' in request.rel_url:
-            try:
-                message_number = int(request.rel_url.query['count'])
-            except ValueError:
-                message_number = stream.config['stream-overlays']['chat']['max-number-of-messages']
+        try:
+            message_number = int(request.rel_url.query.get('count', 'blah'))
+        except ValueError:
+            message_number = stream.config['stream-overlays']['chat']['max-number-of-messages']
 
         if message_number > 0:
             messages = stream.chat_messages[-message_number:]
