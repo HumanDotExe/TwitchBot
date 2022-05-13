@@ -3,7 +3,7 @@ import setuptools
 setuptools.setup(
     name='TwitchBot',
     author='Daenara',
-    version='0.0.2',
+    version='0.0.3',
     url='https://github.com/HumanDotExe/TwitchBot',
     packages=setuptools.find_packages(),
     py_modules=["chat_bot", "data_types", "twitch_api", "utils", "webserver"],
