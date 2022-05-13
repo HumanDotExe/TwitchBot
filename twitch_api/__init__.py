@@ -132,6 +132,7 @@ class TwitchAPI:
                 log.warning(f"Something went wrong here: No auth for {stream.streamer}.")
             try:
                 stream.set_callback_id(self._event_sub_hook.listen_channel_ban(stream.user_id, EventSubCallbacks.on_ban), EventSubType.CHANNEL_BAN)
+                stream.set_callback_id(self._event_sub_hook.listen_channel_unban(stream.user_id, EventSubCallbacks.on_unban), EventSubType.CHANNEL_UNBAN)
             except EventSubSubscriptionError:
                 log.warning(f"{stream.streamer} does not have the app authorized.")
 

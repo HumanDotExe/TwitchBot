@@ -36,8 +36,7 @@ class EventSubCallbacks:
         if data['event']['is_permanent']:
             ban_user = data['event']['user_login']
             reason = f"banned in channel {stream.streamer}"
-            # TODO: this condition is always true, check why and fix
-            if data['event']['reason'] is "":
+            if data['event']['reason'] is not "":
                 reason = f"{reason}: {data['event']['reason']}"
             bot = ChatBot.get_bot()
             for s in Stream.get_streams():
@@ -46,4 +45,17 @@ class EventSubCallbacks:
                     if channel and channel.get_chatter(bot.nick).is_mod:
                         log.info(f"Banning {ban_user} in channel {s.streamer} for {reason}")
                         await channel.send(f"/ban {ban_user} {reason}")
+
+    @staticmethod
+    async def on_unban(data: dict):
+        log.debug("Unban callback")
+        stream = Stream.get_stream(data['event']['broadcaster_user_name'])
+        unban_user = data['event']['user_login']
+        bot = ChatBot.get_bot()
+        for s in Stream.get_streams():
+            if stream.streamer is not s.streamer and s.config['sync-bans']:
+                channel = bot.get_channel(s.streamer.lower())
+                if channel and channel.get_chatter(bot.nick).is_mod:
+                    log.info(f"Unbanning {unban_user} in channel {s.streamer}")
+                    await channel.send(f"/unban {unban_user}")
 
