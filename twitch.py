@@ -10,7 +10,7 @@ from twitch_api import TwitchAPI
 from data_types.twitch_bot_config import TwitchBotConfig
 from webserver import Webserver
 
-debug_file_handler = logging.FileHandler("debug/debug.log", mode='w')
+debug_file_handler = logging.FileHandler(pathlib.Path(__file__).resolve().parent / "debug" / "debug.log", mode='w')
 debug_file_handler.setFormatter(logging.Formatter('%(message)s'))
 logging.getLogger("debug-logger").addHandler(debug_file_handler)
 
