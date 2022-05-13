@@ -1,3 +1,6 @@
+from data_types.types_collection import ChatMessageType
+
+
 class ChatMessage:
     __global_emotes = {}
     __global_badges = {}
@@ -20,11 +23,18 @@ class ChatMessage:
     def __init__(self, message: str, time: int, refresh_time: int, tags: dict):
         self.__user = tags['display-name']
         self.__user_with_badges = self.format_user(tags)
-        self.__type = 'NORMAL'
+        if tags['first-msg'] == '1':
+            self.__type = ChatMessageType.FIRST_TIME
+        else:
+            self.__type = ChatMessageType.NORMAL
+        self.__is_deleted = False
         self.__message = self.format_message(message)
         self.__message_with_emotes = self.replace_twitch_emotes(self.__message, tags)
         self.__time = time
         self.__refresh_time = refresh_time
+
+    def __eq__(self, other):
+        return isinstance(other, ChatMessage) and self.__user == other.__user and self.__message == other.__message
 
     @property
     def time_left(self):
@@ -35,16 +45,31 @@ class ChatMessage:
 
     @property
     def chat_message(self):
-        if self.__type == 'COMMAND':
+        if self.__type == ChatMessageType.COMMAND:
             return f"{self.__user_with_badges} <i>{self.__message_with_emotes}</i>"
         return f"{self.__user_with_badges}: {self.__message_with_emotes}"
+
+    @property
+    def deleted(self):
+        return self.__is_deleted
+
+    @property
+    def user(self):
+        return self.__user
+
+    @property
+    def message(self):
+        return self.__message
 
     def format_message(self, message: str):
         if 'ACTION' in message:
             message = message.replace('ACTION ', '')
             message = message.replace('', '')
-            self.__type = 'COMMAND'
+            self.__type = ChatMessageType.COMMAND
         return message
+
+    def delete(self):
+        self.__is_deleted = True
 
     @classmethod
     def format_user(cls, tags):

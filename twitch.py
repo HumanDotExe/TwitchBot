@@ -10,8 +10,13 @@ from twitch_api import TwitchAPI
 from data_types.twitch_bot_config import TwitchBotConfig
 from webserver import Webserver
 
+debug_file_handler = logging.FileHandler("debug/debug.log", mode='w')
+debug_file_handler.setFormatter(logging.Formatter('%(message)s'))
+logging.getLogger("debug-logger").addHandler(debug_file_handler)
+
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(name)s %(levelname)s: %(message)s')
 logging.getLogger("asyncio").disabled = True
+logging.getLogger("debug-logger").propagate = False
 
 log = logging.getLogger(__name__)
 signal_to_name = dict((k, v) for v, k in reversed(sorted(signal.__dict__.items())) if v.startswith('SIG') and not v.startswith('SIG_'))
@@ -24,8 +29,9 @@ def startup():
 
     base_path = pathlib.Path(__file__).resolve().parent / config['GENERAL']['BASE_FOLDER_NAME']
     log.debug(f"Base path: {base_path}")
-    TwitchAPI.set_twitch_api(TwitchAPI(config['APP']['CLIENT_ID'], config['APP']['CLIENT_SECRET'], config['GENERAL']['MONITOR_STREAMS'].split(" "), base_path))
+    TwitchAPI.set_twitch_api(TwitchAPI(config['APP']['CLIENT_ID'], config['APP']['CLIENT_SECRET'], config['USER']['refresh_token'], config['GENERAL']['MONITOR_STREAMS'].split(" "), base_path))
     TwitchAPI.get_twitch_api().setup_event_subs(config['GENERAL']['TWITCH_CALLBACK_URL'], config['GENERAL'].getint('TWITCH_CALLBACK_PORT'))
+    TwitchAPI.get_twitch_api().setup_pubsub(TwitchAPI.get_twitch_api().get_user_id_by_name(config['BOT']['NICK']))
     ChatMessage.set_global_emotes(TwitchAPI.get_twitch_api().get_global_chat_emotes())
     ChatMessage.set_global_badges(TwitchAPI.get_twitch_api().get_global_chat_badges())
 

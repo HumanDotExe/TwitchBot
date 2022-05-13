@@ -1,6 +1,13 @@
 from enum import Enum
 
 
+class ChatMessageType(Enum):
+    NORMAL = "normal"
+    FIRST_TIME = "first_time"
+    ANNOUNCEMENT = "announcement"
+    COMMAND = "command"
+
+
 class NotificationType(Enum):
     SUB = "subscription"
     FOLLOW = "follow"
@@ -44,6 +51,16 @@ class EventSubType(Enum):
     USER_AUTHORIZATION_GRANT = 35
     USER_AUTHORIZATION_REVOKE = 36
     USER_UPDATE = 37
+
+
+class PubSubType(Enum):
+    CHAT_MODERATOR_ACTIONS = 0
+
+
+class ModerationActionType(Enum):
+    CLEAR = "clear"
+    BAN = "ban"
+    UNBAN = "unban"
 
 
 class InvalidDataException(Exception):

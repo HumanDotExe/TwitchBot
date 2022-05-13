@@ -4,11 +4,12 @@ import datetime
 import logging
 import pathlib
 from typing import Union, List
+from uuid import UUID
 
 from data_types.chat_message import ChatMessage
 from data_types.notification_resource import NotificationResource
 from data_types.per_stream_config import PerStreamConfig
-from data_types.types_collection import NotificationType, EventSubType
+from data_types.types_collection import NotificationType, EventSubType, PubSubType
 
 log = logging.getLogger(__name__)
 
@@ -57,6 +58,7 @@ class Stream:
         self.queue = []
         self.ban_queue = []
         self.active_callbacks = {}
+        self.active_pubsub_uuids = {}
 
         self.paths = {"base": base_path}
         self.paths["stream"] = self.paths["base"] / self.streamer.lower()
@@ -118,8 +120,14 @@ class Stream:
     def set_callback_id(self, callback_id: str, topic: Union[EventSubType]):
         self.active_callbacks[topic] = callback_id
 
-    def get_callback_id(self, topic: Union[EventSubType]):
+    def get_callback_id(self, topic: Union[EventSubType]) -> str:
         return self.active_callbacks[topic]
+
+    def set_pubsub_uuid(self, uuid: UUID, topic: Union[PubSubType]):
+        self.active_pubsub_uuids[topic] = uuid
+
+    def get_pubsub_uuid(self, topic: Union[PubSubType]) -> UUID:
+        return self.active_pubsub_uuids[topic]
 
     def add_to_queue(self, name: str, notification_type: NotificationType):
         for entry in self.config['stream-overlays']['notifications']['block']:
@@ -150,7 +158,31 @@ class Stream:
         self.__chat_messages.append(ChatMessage(message, self.config['stream-overlays']['chat']['message-stays-for'], self.config['stream-overlays']['chat']['message-refresh-rate'], tags))
 
     def remove_chat_message(self, message: ChatMessage):
+        """Completely removes the chat message from the list as if it was never there"""
         self.__chat_messages.remove(message)
+
+    def find_chat_message(self, message: str, user: str) -> Union[ChatMessage, None]:
+        """Finds the ChatMessage instance"""
+        for chat_message in self.__chat_messages:
+            if chat_message.user == user and chat_message.message == message:
+                return chat_message
+        return None
+
+    def delete_all_messages_by_user(self, user: str):
+        """delete all messages written by user. Intended to delete messages on ban"""
+        for chat_message in self.__chat_messages:
+            if chat_message.user == user:
+                chat_message.delete()
+
+    def delete_chat_message(self, message: str, user: str):
+        """Marks a chat message as deleted for display purposes. Intended to be called if a mod deletes a message"""
+        chat_message = self.find_chat_message(message, user)
+        if chat_message:
+            chat_message.delete()
+
+
+    def clear_chat(self):
+        self.__chat_messages = []
 
     @property
     def current_cooldown(self):
