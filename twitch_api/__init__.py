@@ -66,7 +66,9 @@ class TwitchAPI:
         log.info("Authentication started")
         self._twitch = Twitch(self._client_id, self._client_secret)
         self._twitch.user_auth_refresh_callback = self.user_refresh
+        log.info("App authentication")
         self._twitch.authenticate_app(self._app_auth_scope)
+        log.info("User authentication")
         try:
             self._token, self._refresh_token = refresh_access_token(self._refresh_token, self._client_id, self._client_secret)
         except InvalidRefreshTokenException:
@@ -134,6 +136,7 @@ class TwitchAPI:
                 log.warning(f"{stream.streamer} does not have the app authorized.")
 
     def setup_pubsub(self, user_id: str):
+        log.info("Setting up PubSub")
         if self._pubsub is None:
             self._pubsub = PubSub(self._twitch)
 
@@ -142,7 +145,7 @@ class TwitchAPI:
             try:
                 stream.set_pubsub_uuid(self._pubsub.listen_chat_moderator_actions(user_id, stream.user_id, PubSubCallbacks.on_chat_moderator_action), PubSubType.CHAT_MODERATOR_ACTIONS)
             except MissingScopeException:
-                log.error(f"{stream.streamer} does not have the app authorized.")
+                log.error(f"{stream.streamer} is missing user authentication")
             except TwitchAuthorizationException:
                 log.error(f"General authorization problem")
             except TwitchBackendException:

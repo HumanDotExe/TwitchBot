@@ -26,7 +26,9 @@ class ChatBot(commands.Bot):
     def __init__(self, username: str, oauth: str, prefix: str = "!"):
         log.debug("Bot Object created")
         streams = Stream.get_streams()
-        self._channels = [stream.streamer for stream in streams if stream.config['chat-bot']['save-chatlog']]
+        # the .lower() is needed in twitchio 2.2.0 because of a bug that does not call event_ready if there
+        # are uppercase characters in the channel list
+        self._channels = [stream.streamer.lower() for stream in streams if stream.config['chat-bot']['enabled']]
         self._prefix = prefix
         self.display_nick = username
         self._bot_tags = {}
