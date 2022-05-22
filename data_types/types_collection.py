@@ -63,6 +63,26 @@ class ModerationActionType(Enum):
     UNBAN = "unban"
 
 
+class BeatSaberMessageType(Enum):
+    NEXT_SONG = 0
+    QUEUE_OPEN = 1
+    QUEUE_CLOSE = 2
+    SONG_REMOVED = 3
+    QUEUE_CLOSED = 4
+    QUEUE_OPENED = 5
+    SONG_ADDED = 6
+    SONG_ADDED_TOO_MANY_RESULTS = 7
+    SONG_ADDED_NOT_FOUND = 8
+    SONG_ADDED_QUEUE_CLOSED = 9
+
+
+class ChatBotModuleType(Enum):
+    BASE = 0
+    CUSTOM = 1
+    MOD = 2
+    BEATSABER = 3
+
+
 class InvalidDataException(Exception):
     pass
 

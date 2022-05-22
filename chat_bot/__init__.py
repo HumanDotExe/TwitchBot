@@ -7,6 +7,8 @@ from chat_bot.mod_commands import ModCommands
 from data_types.stream import Stream
 from twitchio.ext import commands
 
+from data_types.types_collection import ChatBotModuleType
+
 log = logging.getLogger(__name__)
 logging.getLogger("twitchio.websocket").disabled = True
 logging.getLogger("twitchio.client").disabled = True
@@ -14,6 +16,12 @@ logging.getLogger("twitchio.client").disabled = True
 
 class ChatBot(commands.Bot):
     __bot = None
+    __module_types_to_class = {
+        ChatBotModuleType.BASE: "chat_bot.base_commands",
+        ChatBotModuleType.MOD: "chat_bot.mod_commands",
+        ChatBotModuleType.CUSTOM: "chat_bot.custom_commands",
+        ChatBotModuleType.BEATSABER: "chat_bot.beatsaber_commands"
+    }
 
     @classmethod
     def set_bot(cls, bot: ChatBot):
@@ -38,10 +46,25 @@ class ChatBot(commands.Bot):
             prefix=self._prefix,
             initial_channels=self._channels
         )
-        self.load_module("chat_bot.base_commands")
-        self.load_module("chat_bot.mod_commands")
-        self.load_module("chat_bot.custom_commands")
-        self.load_module("chat_bot.beatsaber_commands")
+        self.load_module_by_type(ChatBotModuleType.BASE)
+        self.load_module_by_type(ChatBotModuleType.MOD)
+        self.load_module_by_type(ChatBotModuleType.CUSTOM)
+
+    def load_module_by_type(self, module_type: ChatBotModuleType):
+        if module_type in self.__module_types_to_class and self.__module_types_to_class[module_type] not in self._modules:
+            self.load_module(self.__module_types_to_class[module_type])
+
+    def unload_module_by_type(self, module_type: ChatBotModuleType):
+        if module_type in self.__module_types_to_class and self.__module_types_to_class[module_type] in self._modules:
+            self.unload_module(self.__module_types_to_class[module_type])
+
+    def reload_module_by_type(self, module_type: ChatBotModuleType):
+        if module_type in self.__module_types_to_class and self.__module_types_to_class[module_type] in self._modules:
+            self.reload_module(self.__module_types_to_class[module_type])
+
+    def unload_all_modules(self):
+        for module_type in self.__module_types_to_class:
+            self.unload_module_by_type(module_type)
 
     async def start_chat_bot(self):
         log.info("Starting ChatBot")
@@ -105,7 +128,7 @@ class ChatBot(commands.Bot):
         if channel:
             await channel.send(message)
 
-    async def announced(self, message: str, channel_name: str):
+    async def announce(self, message: str, channel_name: str):
         channel = self.get_channel(channel_name)
         if channel:
             await channel.send("/announce " + message)

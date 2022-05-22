@@ -1,33 +1,59 @@
 import aiohttp
 from aiohttp import web
 
+import simplematch
+
 import logging
 
 from aiohttp.web_request import Request
 
 from chat_bot import ChatBot
 from data_types.stream import Stream
+from data_types.types_collection import BeatSaberMessageType
+from utils.string_and_dict_operations import strip_whitespaces
 
 log = logging.getLogger(__name__)
+debug = logging.getLogger("debug-logger")
 
 
 async def websocket_handler(request: Request):
-    stream = None
-    for s in Stream.get_streams():
-        if s.streamer.lower() == request.rel_url.name:
-            stream = s
+    stream = Stream.get_stream(request.rel_url.name)
     if stream:
-        ws = web.WebSocketResponse()
-        await ws.prepare(request)
-        stream.set_beatsaber_websocket(ws)
+        stream.set_beatsaber_websocket(web.WebSocketResponse())
+        await stream.beatsaber_websocket.prepare(request)
         log.info(f"Beat Saber Websocket connection for stream {stream.streamer} ready")
 
-        async for msg in ws:
-            if msg.type == aiohttp.WSMsgType.TEXT:
-                log.debug(msg.data)
+        async for msg in stream.beatsaber_websocket:
+            log.debug(msg)
+            if msg.type == aiohttp.WSMsgType.CLOSED:
+                pass
+            elif msg.type == aiohttp.WSMsgType.TEXT:
                 message = str(msg.data).encode('utf-8').decode('utf-8-sig')
+                if message_to_dict(message) is None:
+                    debug.info(f"beatsaber: {message}")
                 await ChatBot.get_bot().send(message, stream.streamer)
             elif msg.type == aiohttp.WSMsgType.ERROR:
-                log.error(f"Beat Saber Websocket for stream {stream.streamer} closed with exception: {ws.exception()}")
+                log.error(f"Beat Saber Websocket for stream {stream.streamer} closed with exception: {stream.beatsaber_websocket.exception()}")
 
     print('Websocket connection closed')
+
+
+template_dict = {
+    BeatSaberMessageType.QUEUE_OPEN: "Queue is open.",
+    BeatSaberMessageType.QUEUE_CLOSE: "Queue is closed.",
+    BeatSaberMessageType.NEXT_SONG: "{song_name}*/{band_name} ({beatsaver_code}) requested by {requester} is next.",
+    BeatSaberMessageType.SONG_REMOVED: "{song_name} ({beatsaver_code}) removed.",
+    BeatSaberMessageType.QUEUE_OPENED: "Queue is now open.",
+    BeatSaberMessageType.QUEUE_CLOSED: "Queue is now closed.",
+    BeatSaberMessageType.SONG_ADDED: "Request {song_name}*/{band_name} ({beatsaver_code}) added to queue.",
+    BeatSaberMessageType.SONG_ADDED_TOO_MANY_RESULTS: "Request for '{request}}' produces {result_number:int} results*",
+    BeatSaberMessageType.SONG_ADDED_NOT_FOUND: "Invalid BeatSaver ID \"{beatsaver_code}\" specified. https://api.beatsaver.com/maps/id/9cc5",
+    BeatSaberMessageType.SONG_ADDED_QUEUE_CLOSED: "Queue is currently closed.",
+}
+
+
+def message_to_dict(message: str):
+    for message_type in BeatSaberMessageType:
+        if message_type in template_dict and simplematch.test(template_dict[message_type], message):
+            return strip_whitespaces({**{"type": message_type}, **simplematch.match(template_dict[message_type], message)})
+    return None

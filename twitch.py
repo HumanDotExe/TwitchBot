@@ -7,6 +7,7 @@ from types import FrameType
 from beatsaber_request_websocket import BeatSaberIntegration
 from chat_bot import ChatBot
 from data_types.chat_message import ChatMessage
+from data_types.types_collection import ChatBotModuleType
 from twitch_api import TwitchAPI
 from data_types.twitch_bot_config import TwitchBotConfig
 from webserver import Webserver
@@ -28,28 +29,35 @@ def startup():
     config = TwitchBotConfig('secrets.ini')
     TwitchBotConfig.set_config(config)
 
+    beatsaber_exclusive = config.has_section('BEATSABER') and config['BEATSABER'].getboolean("EXCLUSIVE")
+
     base_path = pathlib.Path(__file__).resolve().parent / config['GENERAL']['BASE_FOLDER_NAME']
-    log.debug(f"Base path: {base_path}")
+
     TwitchAPI.set_twitch_api(TwitchAPI(config['APP']['CLIENT_ID'], config['APP']['CLIENT_SECRET'], config['USER']['refresh_token'], config['GENERAL']['MONITOR_STREAMS'].split(" "), base_path))
-    TwitchAPI.get_twitch_api().setup_event_subs(config['GENERAL']['TWITCH_CALLBACK_URL'], config['GENERAL'].getint('TWITCH_CALLBACK_PORT'))
-    TwitchAPI.get_twitch_api().setup_pubsub(TwitchAPI.get_twitch_api().get_user_id_by_name(config['BOT']['NICK']))
-    ChatMessage.set_global_emotes(TwitchAPI.get_twitch_api().get_global_chat_emotes())
-    ChatMessage.set_global_badges(TwitchAPI.get_twitch_api().get_global_chat_badges())
+    if not beatsaber_exclusive:
+        TwitchAPI.get_twitch_api().setup_event_subs(config['GENERAL']['TWITCH_CALLBACK_URL'], config['GENERAL'].getint('TWITCH_CALLBACK_PORT'))
+        TwitchAPI.get_twitch_api().setup_pubsub(TwitchAPI.get_twitch_api().get_user_id_by_name(config['BOT']['NICK']))
+        ChatMessage.set_global_emotes(TwitchAPI.get_twitch_api().get_global_chat_emotes())
+        ChatMessage.set_global_badges(TwitchAPI.get_twitch_api().get_global_chat_badges())
 
     log.info("Setting up bot")
     ChatBot.set_bot(ChatBot(config['BOT']['NICK'], config['BOT']['CHAT_OAUTH']))
     # asyncio.ensure_future(_bot.start())
     asyncio.ensure_future(ChatBot.get_bot().start_chat_bot())
 
-    log.info("Setup Webserver")
-    Webserver.set_webserver(Webserver())
-    asyncio.ensure_future(Webserver.get_webserver().start_webserver(config['WEBSERVER']['BIND_IP'], config['WEBSERVER'].getint('BIND_PORT')))
+    if not beatsaber_exclusive:
+        log.info("Setup Webserver")
+        Webserver.set_webserver(Webserver())
+        asyncio.ensure_future(Webserver.get_webserver().start_webserver(config['WEBSERVER']['BIND_IP'], config['WEBSERVER'].getint('BIND_PORT')))
 
-    log.info("Setup Beat Saber Integration")
-    BeatSaberIntegration.set_beatsaber(BeatSaberIntegration())
-    asyncio.ensure_future(
-        BeatSaberIntegration.get_beatsaber().start_beatsaber_integration(config['BEATSABER']['BIND_IP'],
-                                                                         config['BEATSABER'].getint('BIND_PORT')))
+    if config.has_section('BEATSABER') and config['BEATSABER'].getboolean("ENABLED"):
+        log.info("Setup Beat Saber Integration")
+        BeatSaberIntegration.set_beatsaber(BeatSaberIntegration())
+        asyncio.ensure_future(BeatSaberIntegration.get_beatsaber().start_beatsaber_integration(config['BEATSABER']['BIND_IP'], config['BEATSABER'].getint('BIND_PORT')))
+        if beatsaber_exclusive:
+            log.info("Exclusive Beatsaber mode, unloading all modules")
+            ChatBot.get_bot().unload_all_modules()
+        ChatBot.get_bot().load_module_by_type(ChatBotModuleType.BEATSABER)
 
     log.info("Finished Setup")
 
@@ -73,3 +81,4 @@ if __name__ == "__main__":
     signal.signal(signal.SIGTERM, exit_handler)
     startup()
     asyncio.get_event_loop().run_forever()
+
