@@ -41,6 +41,7 @@ class ChatBot(commands.Bot):
         self.load_module("chat_bot.base_commands")
         self.load_module("chat_bot.mod_commands")
         self.load_module("chat_bot.custom_commands")
+        self.load_module("chat_bot.beatsaber_commands")
 
     async def start_chat_bot(self):
         log.info("Starting ChatBot")
@@ -98,3 +99,13 @@ class ChatBot(commands.Bot):
             stream.add_chat_message(message.content, message.tags)
         log.debug(f"{message.channel.name} -> {message.author.display_name}: {message.content}")
         await self.handle_commands(message)
+
+    async def send(self, message: str, channel_name: str):
+        channel = self.get_channel(channel_name)
+        if channel:
+            await channel.send(message)
+
+    async def announced(self, message: str, channel_name: str):
+        channel = self.get_channel(channel_name)
+        if channel:
+            await channel.send("/announce " + message)

@@ -6,6 +6,8 @@ import pathlib
 from typing import Union, List
 from uuid import UUID
 
+from aiohttp.web_ws import WebSocketResponse
+
 from data_types.chat_message import ChatMessage
 from data_types.notification_resource import NotificationResource
 from data_types.per_stream_config import PerStreamConfig
@@ -59,6 +61,8 @@ class Stream:
         self.ban_queue = []
         self.active_callbacks = {}
         self.active_pubsub_uuids = {}
+
+        self._beatsaber_websocket = None
 
         self.paths = {"base": base_path}
         self.paths["stream"] = self.paths["base"] / self.streamer.lower()
@@ -180,9 +184,15 @@ class Stream:
         if chat_message:
             chat_message.delete()
 
-
     def clear_chat(self):
         self.__chat_messages = []
+
+    def set_beatsaber_websocket(self, websocket: WebSocketResponse):
+        self._beatsaber_websocket = websocket
+
+    @property
+    def beatsaber_websocket(self) -> Union[WebSocketResponse, None]:
+        return self._beatsaber_websocket
 
     @property
     def current_cooldown(self):

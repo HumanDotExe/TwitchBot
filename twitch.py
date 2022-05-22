@@ -4,6 +4,7 @@ import pathlib
 import signal
 from types import FrameType
 
+from beatsaber_request_websocket import BeatSaberIntegration
 from chat_bot import ChatBot
 from data_types.chat_message import ChatMessage
 from twitch_api import TwitchAPI
@@ -44,6 +45,12 @@ def startup():
     Webserver.set_webserver(Webserver())
     asyncio.ensure_future(Webserver.get_webserver().start_webserver(config['WEBSERVER']['BIND_IP'], config['WEBSERVER'].getint('BIND_PORT')))
 
+    log.info("Setup Beat Saber Integration")
+    BeatSaberIntegration.set_beatsaber(BeatSaberIntegration())
+    asyncio.ensure_future(
+        BeatSaberIntegration.get_beatsaber().start_beatsaber_integration(config['BEATSABER']['BIND_IP'],
+                                                                         config['BEATSABER'].getint('BIND_PORT')))
+
     log.info("Finished Setup")
 
 
@@ -57,6 +64,8 @@ def exit_handler(signal_number: int, _: FrameType):
         asyncio.ensure_future(ChatBot.get_bot().stop_chat_bot())
     if TwitchAPI.get_twitch_api():
         TwitchAPI.get_twitch_api().stop_twitch_api()
+    if BeatSaberIntegration.get_beatsaber():
+        asyncio.ensure_future(BeatSaberIntegration.get_beatsaber().stop_beatsaber_integration())
 
 
 if __name__ == "__main__":
