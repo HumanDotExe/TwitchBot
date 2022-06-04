@@ -20,7 +20,7 @@ class ChatBot(commands.Bot):
         ChatBotModuleType.BASE: "chat_bot.base_commands",
         ChatBotModuleType.MOD: "chat_bot.mod_commands",
         ChatBotModuleType.CUSTOM: "chat_bot.custom_commands",
-        ChatBotModuleType.BEATSABER: "chat_bot.beatsaber_commands"
+        ChatBotModuleType.BEATSABER: "chat_bot.beatsaber_commands",
     }
 
     @classmethod
@@ -49,6 +49,7 @@ class ChatBot(commands.Bot):
         self.load_module_by_type(ChatBotModuleType.BASE)
         self.load_module_by_type(ChatBotModuleType.MOD)
         self.load_module_by_type(ChatBotModuleType.CUSTOM)
+        self.load_module("chat_bot.test_commands")
 
     def load_module_by_type(self, module_type: ChatBotModuleType):
         if module_type in self.__module_types_to_class and self.__module_types_to_class[module_type] not in self._modules:
