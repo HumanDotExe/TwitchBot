@@ -26,12 +26,7 @@ class BaseCommands(CustomCog):
             uptime = stream.uptime
             if uptime:
                 delta = timedelta.format_timedelta(uptime)
-                if int(delta['days']) == 1:
-                    message = f"{stream.streamer} has been live for {delta['days']} day, {delta['hours']}:{delta['minutes']}h."
-                elif int(delta['days']) > 1:
-                    message = f"{stream.streamer} has been live for {delta['days']} days, {delta['hours']}:{delta['minutes']}h."
-                else:
-                    message = f"{stream.streamer} has been live for {delta['hours']}:{delta['minutes']}h."
+                message = f"{stream.streamer} has been live for {delta['hours']}:{delta['minutes']}h."
             else:
                 message = f"{stream.streamer} is not streaming right now."
             await ctx.send(message)
