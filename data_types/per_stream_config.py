@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
+
 import yaml
-from schema import Schema, And, Use, Optional, SchemaError
+from schema import Schema, And, Or, Use, Optional, SchemaError
+from utils.string_and_dict_operations import clean_empty
 
 log = logging.getLogger(__name__)
 
@@ -30,13 +33,13 @@ class PerStreamConfig:
                     Optional('block', default=[]): And(list),
                     'follow': {
                         'message': And(str),
-                        Optional('image', default=None): And(str),
-                        Optional('sound', default=None): And(str)
+                        Optional('image', default=None): Or(str, None),
+                        Optional('sound', default=None): Or(str, None)
                     },
                     'subscription': {
                         'message': And(str),
-                        Optional('image', default=None): And(str),
-                        Optional('sound', default=None): And(str)
+                        Optional('image', default=None): Or(str, None),
+                        Optional('sound', default=None): Or(str, None)
                     }
                 },
                 'chat': {
@@ -76,20 +79,33 @@ class PerStreamConfig:
     """
 
     @classmethod
-    def load_config(cls, config_file):
+    def load_config(cls, config_file: Path):
         log.info("Reading Config")
         with open(config_file, 'r') as file:
             config = yaml.safe_load(file)
 
         try:
             validated = cls.__schema.validate(config)
-        except SchemaError:
-            log.warning(f"Config file {config_file} invalid, using fallback configuration.")
+        except SchemaError as e:
+            log.warning(f"Config file {config_file} invalid, using fallback configuration: {e}")
             try:
                 config = yaml.safe_load(cls.__fallback)
                 validated = cls.__schema.validate(config)
-            except SchemaError:
-                log.error("Fallback configuration invalid. This should not happen, contact developer.")
+            except SchemaError as e:
+                log.error(f"Fallback configuration invalid. This should not happen, contact developer: {e}")
                 return {}
         return validated
 
+    @classmethod
+    def save_config(cls, config_file: Path, config: dict):
+        log.info("Saving Config")
+
+        cleaned = clean_empty(config)
+        try:
+            cls.__schema.validate(cleaned)
+        except SchemaError as e:
+            log.warning(f"Config invalid, not saving: {e}")
+            return
+
+        with open(config_file, 'w') as file:
+            yaml.safe_dump(cleaned, file, sort_keys=False)

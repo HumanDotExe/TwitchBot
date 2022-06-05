@@ -67,6 +67,7 @@ class Stream:
         self.paths = {"base": base_path}
         self.paths["stream"] = self.paths["base"] / self.streamer.lower()
         self.paths["resources"] = self.paths["stream"] / "resources"
+        self.paths["config"] = self.paths["stream"] / "config.yaml"
         self.load_resources_and_settings()
 
     def load_resources_and_settings(self):
@@ -74,10 +75,9 @@ class Stream:
 
         self.__notifications = {}
 
-        config_path = self.paths["stream"] / "config.yaml"
-        if config_path.is_file():
+        if self.paths["config"].is_file():
             log.debug(f"Config file found")
-            self.config = PerStreamConfig.load_config(config_path)
+            self.config = PerStreamConfig.load_config(self.paths["config"])
         else:
             log.debug(f"Using default stream config")
             self.config = PerStreamConfig.load_config(self.paths["base"] / "default.yaml")
@@ -89,6 +89,11 @@ class Stream:
                 self.paths["chatlog"] = self.paths["stream"] / "logs"
                 self.paths["chatlog"].mkdir(parents=True, exist_ok=True)
             self.__setup_custom_commands()
+
+    def save_settings(self):
+        log.info(f"Saving Stream settings for {self.streamer}")
+
+        PerStreamConfig.save_config(self.paths["config"], self.config)
 
     def __setup_notifications(self):
         notifications = self.config['stream-overlays']['notifications']
