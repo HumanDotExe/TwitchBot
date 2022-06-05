@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import logging
 import yaml
-from schema import Schema, And, Use, Optional, SchemaError
+from schema import Schema, And, Or, Use, Optional, SchemaError
+from utils.string_and_dict_operations import clean_empty
 
 log = logging.getLogger(__name__)
 
@@ -19,24 +20,24 @@ class PerStreamConfig:
                 {
                     'enabled': And(bool),
                     'save-chatlog': And(bool),
-                    Optional('bot-color', default="#FFFFFF"): And(str),
+                    Optional('bot-color', default="#FFFFFF"): Or(str, None),
                     'online-message': And(str),
-                    Optional('offline-message', default=""): And(str),
-                    Optional('ignore-commands', default=[]): And(list)
+                    Optional('offline-message', default=""): Or(str, None),
+                    Optional('ignore-commands', default=[]): Or(list, None)
                 },
             'stream-overlays': {
                 'notifications': {
                     'cooldown': And(int),
-                    Optional('block', default=[]): And(list),
+                    Optional('block', default=[]): Or(list, None),
                     'follow': {
                         'message': And(str),
-                        Optional('image', default=None): And(str),
-                        Optional('sound', default=None): And(str)
+                        Optional('image', default=None): Or(str, None),
+                        Optional('sound', default=None): Or(str, None)
                     },
                     'subscription': {
                         'message': And(str),
-                        Optional('image', default=None): And(str),
-                        Optional('sound', default=None): And(str)
+                        Optional('image', default=None): Or(str, None),
+                        Optional('sound', default=None): Or(str, None)
                     }
                 },
                 'chat': {
@@ -96,5 +97,13 @@ class PerStreamConfig:
     @classmethod
     def save_config(cls, config_file, config):
         log.info("Saving Config")
+
+        cleaned = clean_empty(config)
+        try:
+            validated = cls.__schema.validate(cleaned)
+        except SchemaError:
+            log.error("Config invalid, not saving!")
+            return
+
         with open(config_file, 'w') as file:
-            yaml.safe_dump(config, file, sort_keys=False)
+            yaml.safe_dump(cleaned, file, sort_keys=False)
