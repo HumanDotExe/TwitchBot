@@ -93,3 +93,8 @@ class PerStreamConfig:
                 return {}
         return validated
 
+    @classmethod
+    def save_config(cls, config_file, config):
+        log.info("Saving Config")
+        with open(config_file, 'w') as file:
+            yaml.safe_dump(config, file, sort_keys=False)

@@ -90,6 +90,12 @@ class Stream:
                 self.paths["chatlog"].mkdir(parents=True, exist_ok=True)
             self.__setup_custom_commands()
 
+    def save_settings(self):
+        log.info(f"Saving Stream settings for {self.streamer}")
+
+        config_path = self.paths["stream"] / "config.yaml"
+        PerStreamConfig.save_config(config_path, self.config)
+
     def __setup_notifications(self):
         notifications = self.config['stream-overlays']['notifications']
         for notification_type in NotificationType:
