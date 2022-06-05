@@ -84,12 +84,14 @@ class PerStreamConfig:
 
         try:
             validated = cls.__schema.validate(config)
-        except SchemaError:
+        except SchemaError as e:
+            log.warning(e)
             log.warning(f"Config file {config_file} invalid, using fallback configuration.")
             try:
                 config = yaml.safe_load(cls.__fallback)
                 validated = cls.__schema.validate(config)
-            except SchemaError:
+            except SchemaError as e:
+                log.error(e)
                 log.error("Fallback configuration invalid. This should not happen, contact developer.")
                 return {}
         return validated
@@ -101,7 +103,8 @@ class PerStreamConfig:
         cleaned = clean_empty(config)
         try:
             validated = cls.__schema.validate(cleaned)
-        except SchemaError:
+        except SchemaError as e:
+            log.error(e)
             log.error("Config invalid, not saving!")
             return
 
