@@ -6,6 +6,7 @@ from typing import Union
 from twitchio.ext import commands
 
 import chat_bot
+from chat_bot import CustomCommands
 from chat_bot.custom_cog import CustomCog
 from data_types.stream import Stream
 from data_types.types_collection import NotificationType
@@ -44,8 +45,9 @@ class ModCommands(CustomCog):
             stream = Stream.get_stream(ctx.channel.name)
             stream.load_resources_and_settings()
             cog = self.bot.get_cog("CustomCommands")
-            cog.load_custom_commands(stream)
-            await ctx.send("Stream settings reloaded!")
+            if isinstance(cog, CustomCommands):
+                cog.load_custom_commands(stream)
+                await ctx.send("Stream settings reloaded!")
 
     @commands.command(name="ban_queue")
     async def ban_queue(self, ctx: commands.Context, option: str = None, value: Union[str, int] = None):
@@ -71,6 +73,40 @@ class ModCommands(CustomCog):
                     await ctx.send(f"/ban {entry}")
             else:
                 await ctx.send("Valid options are 'list' to show queue, 'remove value' to remove 'value' from queue, 'clear' to clear the whole queue and 'ban' to ban everyone in queue.")
+
+    @commands.command(name="disable-cmd")
+    async def disable_command(self, ctx: commands.Context, cmd: str):
+        stream = Stream.get_stream(ctx.channel.name)
+        if ctx.author.is_mod and ctx.command.name not in stream.config['chat-bot']['ignore-commands'] or ctx.author.is_broadcaster:
+            if cmd.startswith(self.bot._prefix):
+                cmd = cmd[len(self.bot._prefix):]
+            command = self.bot.get_command(cmd)
+            if command:
+                if command.name not in stream.config['chat-bot']['ignore-commands']:
+                    stream.config['chat-bot']['ignore-commands'].append(command.name)
+                    stream.save_settings()
+                    await ctx.send(f"command \"{cmd}\" disabled")
+                else:
+                    await ctx.send(f"command \"{cmd}\" is already disabled")
+            else:
+                await ctx.send(f"command \"{cmd}\" not found!")
+
+    @commands.command(name="enable-cmd")
+    async def enable_command(self, ctx: commands.Context, cmd: str):
+        stream = Stream.get_stream(ctx.channel.name)
+        if ctx.author.is_mod and ctx.command.name not in stream.config['chat-bot']['ignore-commands'] or ctx.author.is_broadcaster:
+            if cmd.startswith(self.bot._prefix):
+                cmd = cmd[len(self.bot._prefix):]
+            command = self.bot.get_command(cmd)
+            if command:
+                if command.name in stream.config['chat-bot']['ignore-commands']:
+                    stream.config['chat-bot']['ignore-commands'].remove(command.name)
+                    stream.save_settings()
+                    await ctx.send(f"command \"{cmd}\" enabled")
+                else:
+                    await ctx.send(f"command \"{cmd}\" is already enabled")
+            else:
+                await ctx.send(f"command \"{cmd}\" not found!")
 
 
 def prepare(bot: chat_bot.ChatBot):
