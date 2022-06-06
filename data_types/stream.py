@@ -9,6 +9,7 @@ from uuid import UUID
 from aiohttp.web_ws import WebSocketResponse
 
 from data_types.chat_message import ChatMessage
+from data_types.command_file import CommandConfig
 from data_types.notification_resource import NotificationResource
 from data_types.per_stream_config import PerStreamConfig
 from data_types.types_collection import NotificationType, EventSubType, PubSubType
@@ -110,7 +111,10 @@ class Stream:
     def __setup_custom_commands(self):
         command_files = self.paths["resources"].glob('**/*' + self.__command_suffix)
         for command in command_files:
-            self.commands[command.name.replace(self.__command_suffix, '')] = command.read_text()
+            log.debug(command)
+            command_config = CommandConfig.load_command_file(command)
+            if command_config:
+                self.commands[command_config["name"]] = command_config
 
     def stream_started(self, start: str):
         self.__is_streaming = True

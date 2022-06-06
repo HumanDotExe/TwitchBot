@@ -6,6 +6,7 @@ from twitchio.ext import commands
 
 import chat_bot
 from chat_bot.custom_cog import CustomCog
+from data_types.command_file import CommandConfig
 from data_types.stream import Stream
 
 log = logging.getLogger(__name__)
@@ -42,7 +43,16 @@ class CustomCommands(CustomCog):
     async def display_command(ctx: commands.Context):
         stream = Stream.get_stream(ctx.channel.name)
         if ctx.command.name in stream.commands.keys() and ctx.command.name not in stream.config['chat-bot']['ignore-commands']:
-            await ctx.send(stream.commands[ctx.command.name])
+            if CustomCommands.has_user_right(ctx, stream.commands[ctx.command.name]):
+                if type(stream.commands[ctx.command.name]["output"]) is str:
+                    await ctx.send(stream.commands[ctx.command.name]["output"])
+
+    @staticmethod
+    def has_user_right(ctx: commands.Context, command_config: dict) -> bool:
+        log.debug(command_config)
+        return command_config["rights"]["user"] or command_config["rights"][
+            "moderator"] and ctx.author.is_mod or command_config["rights"][
+            "broadcaster"] and ctx.author.is_broadcaster
 
 
 def prepare(bot: chat_bot.ChatBot):
