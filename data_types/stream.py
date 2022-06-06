@@ -112,11 +112,12 @@ class Stream:
 
     def __setup_custom_commands(self):
         command_files = self.paths["resources"].glob('**/*' + self.__command_suffix)
-        for command in command_files:
-            log.debug(command)
-            command_config = CommandConfig.load_command_file(command)
-            if command_config:
-                self.commands[command_config["name"]] = command_config
+        for command_file in command_files:
+            try:
+                command = Command(command_file)
+                self.commands[command.name] = command
+            except ValidationException as e:
+                log.warning(f"Problem loading command {command_file.name}: {e}")
 
     def stream_started(self, start: str):
         self.__is_streaming = True

@@ -50,19 +50,19 @@ class ChatBot(commands.Bot):
         self.load_module("chat_bot.test_commands")
 
     def load_module_by_type(self, module_type: ChatBotModuleType):
-        if module_type in self.__module_types_to_class and self.__module_types_to_class[module_type] not in self._modules:
-            self.load_module(self.__module_types_to_class[module_type])
+        if module_type in ChatBotModuleType and module_type.value not in self._modules:
+            self.load_module(module_type.value)
 
     def unload_module_by_type(self, module_type: ChatBotModuleType):
-        if module_type in self.__module_types_to_class and self.__module_types_to_class[module_type] in self._modules:
-            self.unload_module(self.__module_types_to_class[module_type])
+        if module_type in ChatBotModuleType and module_type.value not in self._modules:
+            self.unload_module(module_type.value)
 
     def reload_module_by_type(self, module_type: ChatBotModuleType):
-        if module_type in self.__module_types_to_class and self.__module_types_to_class[module_type] in self._modules:
-            self.reload_module(self.__module_types_to_class[module_type])
+        if module_type in ChatBotModuleType and module_type.value not in self._modules:
+            self.reload_module(module_type.value)
 
     def unload_all_modules(self):
-        for module_type in self.__module_types_to_class:
+        for module_type in ChatBotModuleType:
             self.unload_module_by_type(module_type)
 
     async def start_chat_bot(self):

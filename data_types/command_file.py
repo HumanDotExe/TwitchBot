@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import logging
-from pathlib import Path
-from typing import List
+from typing import TYPE_CHECKING
 
 import yaml
 from schema import Schema, And, Or, Optional, SchemaError
+
+from data_types.types_collection import ValidationException
 from utils.string_and_dict_operations import clean_empty
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 log = logging.getLogger(__name__)
 
@@ -24,12 +28,21 @@ class CommandConfig:
                 Optional('moderator', default=False): And(bool),
                 Optional('user', default=True): And(bool)
             },
-            'output': Or(str, dict),
+            'output': {
+                Optional('random', default=False): And(bool),
+                'message': Or({
+                    Optional('online', default=None): Or(str, list, None),
+                    Optional('offline', default=None): Or(str, list, None),
+                }, str, list),
+            },
             Optional('help', default=None): Or(str, None),
             Optional('parameter-count', default=0): And(int),
+            Optional('param' + str(range(0, 100))): {
+                Optional('isRequired', default=False): And(bool),
+                Optional('useCallerNameIfEmpty', default=False): And(bool)
+            },
             Optional('random'): {
-                Optional('random-output', default=False): And(bool),
-                Optional('random'+str(range(0, 100))): And(List[str])
+                Optional('random' + str(range(0, 100))): And(list)
             }
         }
     )
@@ -39,21 +52,25 @@ class CommandConfig:
         log.info(f"Reading Command File {command_file.name}")
         with open(command_file, 'r') as file:
             command_config = yaml.safe_load(file)
+        return cls.validate(command_config)
+
+    @classmethod
+    def validate(cls, command_config: dict):
         try:
-            return cls.__schema.validate(command_config)
+            validated = cls.__schema.validate(command_config)
         except SchemaError as e:
-            log.warning(f"Command file {command_file} invalid, using fallback configuration: {e}")
+            raise ValidationException(f"Command file invalid: {e}")
+        if type(validated["output"]["message"]) is str and validated["output"]["random"]:
+            raise ValidationException("Message can't be a String if random output is enabled")
+
+        return validated
 
     @classmethod
     def save_command_file(cls, command_file: Path, command: dict):
         log.info(f"Saving Command {command_file.name}")
 
         cleaned = clean_empty(command)
-        try:
-            cls.__schema.validate(cleaned)
-        except SchemaError as e:
-            log.warning(f"Config invalid, not saving: {e}")
-            return
+        cls.validate(cleaned)
 
         with open(command_file, 'w') as file:
             yaml.safe_dump(cleaned, file, sort_keys=False)
