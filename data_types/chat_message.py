@@ -8,17 +8,19 @@ class ChatMessage:
     @classmethod
     def set_global_emotes(cls, emotes: dict):
         cls.__global_emotes = {}
-        for emote in emotes['data']:
-            cls.__global_emotes[emote['id']] = {k: emote[k] for k in set(list(emote.keys())) - {"id"}}
+        if 'data' in emotes:
+            for emote in emotes['data']:
+                cls.__global_emotes[emote['id']] = {k: emote[k] for k in set(list(emote.keys())) - {"id"}}
 
     @classmethod
     def set_global_badges(cls, badges: dict):
         cls.__global_badges = {}
-        for badge in badges['data']:
-            versions = {}
-            for version in badge['versions']:
-                versions[version['id']] = {k: version[k] for k in set(list(version.keys())) - {"id"}}
-            cls.__global_badges[badge['set_id']] = versions
+        if 'data' in badges:
+            for badge in badges['data']:
+                versions = {}
+                for version in badge['versions']:
+                    versions[version['id']] = {k: version[k] for k in set(list(version.keys())) - {"id"}}
+                cls.__global_badges[badge['set_id']] = versions
 
     def __init__(self, message: str, time: int, refresh_time: int, tags: dict):
         self.__user = tags['display-name']
@@ -75,12 +77,14 @@ class ChatMessage:
     def format_user(cls, tags):
         user = ""
         badges = tags['badges'].split(',')
-        if len(badges) > 0:
-            user += "<span id='badges'>"
+        if len(badges) > 0 and len(cls.__global_badges) > 0:
+            user_badges = ""
             for badge in badges:
                 key, version = badge.split('/')
-                user += f"<img id='badge' src='{cls.__global_badges[key][str(version)]['image_url_1x']}'>"
-            user += "</span>"
+                if key in cls.__global_badges and str(version) in cls.__global_badges[key]:
+                    user_badges += f"<img id='badge' src='{cls.__global_badges[key][str(version)]['image_url_1x']}'>"
+            if len(user_badges) > 0:
+                user += f"<span id='badges'>{user_badges}</span>"
 
         user += f"<span style='color:{tags['color']}'><b>{tags['display-name']}</b></span>"
         return user

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import logging
 
+from twitchio import Channel
+
 from chat_bot.custom_commands import CustomCommands
 from chat_bot.mod_commands import ModCommands
 from data_types.stream import Stream
@@ -33,10 +35,9 @@ class ChatBot(commands.Bot):
 
     def __init__(self, username: str, oauth: str, prefix: str = "!"):
         log.debug("Bot Object created")
-        streams = Stream.get_streams()
         # the .lower() is needed in twitchio 2.2.0 because of a bug that does not call event_ready if there
         # are uppercase characters in the channel list
-        self._channels = [stream.streamer.lower() for stream in streams if stream.config['chat-bot']['enabled']]
+        self._channels = [stream.streamer.lower() for stream in Stream.get_streams() if stream.config['chat-bot']['enabled']]
         self._prefix = prefix
         self.display_nick = username
         self._bot_tags = {}
@@ -92,7 +93,7 @@ class ChatBot(commands.Bot):
                 await channel.send(stream.config['chat-bot']['online-message'].format(bot_name=self.display_nick))
         log.info(f'{self.display_nick} online!')
 
-    async def create_bot_tag_for_stream(self, stream: Stream, channel):
+    async def create_bot_tag_for_channel(self, channel: Channel):
         chatter = channel.get_chatter(self.display_nick)
         if chatter is not None:
             badges = ""
@@ -101,17 +102,17 @@ class ChatBot(commands.Bot):
                     badges += f"{key}/{value}"
                 else:
                     badges += f",{key}/{value}"
-            self._bot_tags[stream.streamer] = {'badges': badges, 'display-name': chatter.display_name,
-                                               'color': stream.config['chat-bot']['bot-color'], 'emotes': ''}
+            self._bot_tags[channel.name] = {'badges': badges, 'display-name': chatter.display_name, 'emotes': ''}
+
+    async def get_bot_tags_for_channel(self, channel: Channel) -> dict:
+        if channel.name not in self._bot_tags:
+            await self.create_bot_tag_for_channel(channel)
+        return self._bot_tags[channel.name]
 
     async def event_message(self, message):
         stream = Stream.get_stream(message.channel.name)
         if message.echo:
-            if stream.config['stream-overlays']['chat']['include-command-output']:
-                if stream.streamer not in self._bot_tags:
-                    await self.create_bot_tag_for_stream(stream, message.channel)
-                if stream.streamer in self._bot_tags:
-                    stream.add_chat_message(message.content, self._bot_tags[stream.streamer])
+            stream.add_chat_message(message.content, await self.get_bot_tags_for_channel(message.channel), True)
             stream.write_into_chatlog(self.display_nick, message.content)
             log.debug(f"{message.channel.name} -> {self.display_nick}: {message.content}")
             return

@@ -39,6 +39,9 @@ def startup():
         TwitchAPI.get_twitch_api().setup_pubsub(TwitchAPI.get_twitch_api().get_user_id_by_name(config['BOT']['NICK']))
         ChatMessage.set_global_emotes(TwitchAPI.get_twitch_api().get_global_chat_emotes())
         ChatMessage.set_global_badges(TwitchAPI.get_twitch_api().get_global_chat_badges())
+    else:
+        ChatMessage.set_global_emotes({})
+        ChatMessage.set_global_badges({})
 
     log.info("Setting up bot")
     ChatBot.set_bot(ChatBot(config['BOT']['NICK'], config['BOT']['CHAT_OAUTH']))

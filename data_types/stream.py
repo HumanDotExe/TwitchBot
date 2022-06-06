@@ -167,7 +167,12 @@ class Stream:
                 time = datetime.datetime.now().time().isoformat()
                 f.write(f"{time}:{user}: {message}\n")
 
-    def add_chat_message(self, message: str, tags: dict):
+    def add_chat_message(self, message: str, tags: dict, is_bot_message: bool = False):
+        if is_bot_message:
+            if self.config['stream-overlays']['chat']['include-command-output']:
+                tags['color'] = self.config['chat-bot']['bot-color']
+            else:
+                return
         self.__chat_messages.append(ChatMessage(message, self.config['stream-overlays']['chat']['message-stays-for'], self.config['stream-overlays']['chat']['message-refresh-rate'], tags))
 
     def remove_chat_message(self, message: ChatMessage):
