@@ -25,6 +25,7 @@ class CommandConfig:
                 Optional('user', default=True): And(bool)
             },
             'output': Or(str, dict),
+            Optional('help', default=None): Or(str, None),
             Optional('parameter-count', default=0): And(int),
             Optional('random'): {
                 Optional('random-output', default=False): And(bool),
