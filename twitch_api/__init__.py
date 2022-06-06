@@ -55,7 +55,7 @@ class TwitchAPI:
         self._app_auth_scope = app_auth_scope
         self._user_auth_scope = user_auth_scope
         self._base_path = base_path
-        self._twitch = None
+        self._twitch: Twitch = None
         self._token = None
         self._event_sub_hook = None
         self._pubsub = None
@@ -115,6 +115,17 @@ class TwitchAPI:
     def get_user_id_by_name(self, name: str) -> str:
         log.info(f"Retrieving user id for {name}")
         return self._twitch.get_users(logins=[name])['data'][0]['id']
+
+    def set_title(self, stream: Stream, title: str) -> bool:
+        log.info(f"Setting title \"{title}\" for {stream.streamer}")
+        return self._twitch.modify_channel_information(broadcaster_id=stream.user_id, title=title)
+
+    def set_game(self, stream: Stream, game: str) -> bool:
+        log.info(f"Setting game {game} for {stream.streamer}")
+        games = self._twitch.get_games(names=[game])
+        if len(games["data"]) is 1:
+            return self._twitch.modify_channel_information(broadcaster_id=stream.user_id, game_id=games["data"][0]["id"])
+        return False
 
     def setup_event_subs(self, callback_url: str, callback_port: int):
         log.info("Setting up webhooks")
