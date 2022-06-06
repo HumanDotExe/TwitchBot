@@ -77,6 +77,7 @@ class TwitchAPI:
             self._token, self._refresh_token = auth.authenticate()
             self._twitch.set_user_authentication(self._token, self._user_auth_scope, self._refresh_token)
             TwitchAPI.user_refresh(self._token, self._refresh_token)
+            return
         try:
             self._twitch.set_user_authentication(self._token, self._user_auth_scope, self._refresh_token)
             TwitchAPI.user_refresh(self._token, self._refresh_token)
@@ -91,11 +92,13 @@ class TwitchAPI:
         log.info("Collecting User Info and Stream Data for monitored streams")
         stream_info = self._twitch.get_streams(user_login=self._monitored_streams)
 
+        from twitch_api.twitch_user_api import TwitchUserAPI
         for info in stream_info['data']:
             stream = Stream(info['user_name'], info['id'], self._base_path)
             stream.stream_started(info['started_at'])
             stream.stream_info_changed(info['title'], info['game_name'], info['is_mature'], info['language'])
             Stream.add_stream(stream)
+            TwitchUserAPI.add_twitch_api(TwitchUserAPI(self._client_id, self._client_secret, stream.streamer, None))
 
         user_info = self._twitch.get_users(logins=self._monitored_streams)
         for info in user_info['data']:
@@ -103,6 +106,7 @@ class TwitchAPI:
             if stream is None:
                 stream = Stream(info['display_name'], info['id'], self._base_path)
                 Stream.add_stream(stream)
+                TwitchUserAPI.add_twitch_api(TwitchUserAPI(self._client_id, self._client_secret, stream.streamer, None))
 
     def get_global_chat_emotes(self):
         log.info("Retrieving chat emotes")
@@ -115,17 +119,6 @@ class TwitchAPI:
     def get_user_id_by_name(self, name: str) -> str:
         log.info(f"Retrieving user id for {name}")
         return self._twitch.get_users(logins=[name])['data'][0]['id']
-
-    def set_title(self, stream: Stream, title: str) -> bool:
-        log.info(f"Setting title \"{title}\" for {stream.streamer}")
-        return self._twitch.modify_channel_information(broadcaster_id=stream.user_id, title=title)
-
-    def set_game(self, stream: Stream, game: str) -> bool:
-        log.info(f"Setting game {game} for {stream.streamer}")
-        games = self._twitch.get_games(names=[game])
-        if len(games["data"]) is 1:
-            return self._twitch.modify_channel_information(broadcaster_id=stream.user_id, game_id=games["data"][0]["id"])
-        return False
 
     def setup_event_subs(self, callback_url: str, callback_port: int):
         log.info("Setting up webhooks")
