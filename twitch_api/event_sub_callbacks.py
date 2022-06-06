@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 import logging
 
-from chat_bot import ChatBot
 from data_types.stream import Stream
 from data_types.types_collection import NotificationType
 
@@ -38,6 +39,7 @@ class EventSubCallbacks:
             reason = f"banned in channel {stream.streamer}"
             if data['event']['reason'] is not "":
                 reason = f"{reason}: {data['event']['reason']}"
+            from chat_bot import ChatBot
             bot = ChatBot.get_bot()
             for s in Stream.get_streams():
                 if stream.streamer is not s.streamer and s.config['sync-bans']:
@@ -51,6 +53,7 @@ class EventSubCallbacks:
         log.debug("Unban callback")
         stream = Stream.get_stream(data['event']['broadcaster_user_name'])
         unban_user = data['event']['user_login']
+        from chat_bot import ChatBot
         bot = ChatBot.get_bot()
         for s in Stream.get_streams():
             if stream.streamer is not s.streamer and s.config['sync-bans']:

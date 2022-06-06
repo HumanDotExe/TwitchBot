@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import aiohttp
 from aiohttp import web
 
@@ -7,7 +9,6 @@ import logging
 
 from aiohttp.web_request import Request
 
-from chat_bot import ChatBot
 from data_types.stream import Stream
 from data_types.types_collection import BeatSaberMessageType
 from utils.string_and_dict_operations import strip_whitespaces
@@ -31,6 +32,7 @@ async def websocket_handler(request: Request):
                 message = str(msg.data).encode('utf-8').decode('utf-8-sig')
                 if message_to_dict(message) is None:
                     debug.info(f"beatsaber: {message}")
+                from chat_bot import ChatBot
                 await ChatBot.get_bot().send(message, stream.streamer)
             elif msg.type == aiohttp.WSMsgType.ERROR:
                 log.error(f"Beat Saber Websocket for stream {stream.streamer} closed with exception: {stream.beatsaber_websocket.exception()}")
