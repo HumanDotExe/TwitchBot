@@ -1,10 +1,15 @@
+from __future__ import annotations
+
 import logging
+from typing import TYPE_CHECKING
 
 from aiohttp import web
-from aiohttp.web_request import Request
 
 from data_types.stream import Stream
 from utils import timedelta
+
+if TYPE_CHECKING:
+    from aiohttp.web_request import Request
 
 log = logging.getLogger(__name__)
 
@@ -63,6 +68,7 @@ async def display_chat_messages(request: Request):
         stream = Stream.get_stream(request.rel_url.query.get('stream', ''))
         content = "<div id='chat' width=500px style='{word-break: break-word;}'>"
 
+        # TODO: finish this, this does not look finished
         message_number = stream.config['stream-overlays']['chat']['max-number-of-messages']
         try:
             message_number = int(request.rel_url.query.get('count', 'blah'))
@@ -81,5 +87,7 @@ async def display_chat_messages(request: Request):
             else:
                 stream.remove_chat_message(message)
         content += "</div>"
-        return web.Response(text=default_html.format(refresh=stream.config['stream-overlays']['chat']['message-refresh-rate'], content=content), content_type='text/html')
+        return web.Response(
+            text=default_html.format(refresh=stream.config['stream-overlays']['chat']['message-refresh-rate'],
+                                     content=content), content_type='text/html')
     return web.Response(text="Error")

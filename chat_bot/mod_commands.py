@@ -1,15 +1,17 @@
 from __future__ import annotations
 
 import logging
-from typing import Union
+from typing import Union, TYPE_CHECKING
 
 from twitchio.ext import commands
 
-import chat_bot
 from chat_bot import CustomCommands
 from chat_bot.custom_cog import CustomCog
 from data_types.stream import Stream
 from data_types.types_collection import NotificationType
+
+if TYPE_CHECKING:
+    from chat_bot import ChatBot
 
 log = logging.getLogger(__name__)
 logging.getLogger("twitchio.websocket").disabled = True
@@ -72,12 +74,14 @@ class ModCommands(CustomCog):
                 for entry in stream.ban_queue:
                     await ctx.send(f"/ban {entry}")
             else:
-                await ctx.send("Valid options are 'list' to show queue, 'remove value' to remove 'value' from queue, 'clear' to clear the whole queue and 'ban' to ban everyone in queue.")
+                await ctx.send(
+                    "Valid options are 'list' to show queue, 'remove value' to remove 'value' from queue, 'clear' to clear the whole queue and 'ban' to ban everyone in queue.")
 
     @commands.command(name="disable-cmd")
     async def disable_command(self, ctx: commands.Context, cmd: str):
         stream = Stream.get_stream(ctx.channel.name)
-        if ctx.author.is_mod and ctx.command.name not in stream.config['chat-bot']['ignore-commands'] or ctx.author.is_broadcaster:
+        if ctx.author.is_mod and ctx.command.name not in stream.config['chat-bot'][
+            'ignore-commands'] or ctx.author.is_broadcaster:
             if cmd.startswith(self.bot._prefix):
                 cmd = cmd[len(self.bot._prefix):]
             command = self.bot.get_command(cmd)
@@ -94,7 +98,8 @@ class ModCommands(CustomCog):
     @commands.command(name="enable-cmd")
     async def enable_command(self, ctx: commands.Context, cmd: str):
         stream = Stream.get_stream(ctx.channel.name)
-        if ctx.author.is_mod and ctx.command.name not in stream.config['chat-bot']['ignore-commands'] or ctx.author.is_broadcaster:
+        if ctx.author.is_mod and ctx.command.name not in stream.config['chat-bot'][
+            'ignore-commands'] or ctx.author.is_broadcaster:
             if cmd.startswith(self.bot._prefix):
                 cmd = cmd[len(self.bot._prefix):]
             command = self.bot.get_command(cmd)
@@ -109,5 +114,5 @@ class ModCommands(CustomCog):
                 await ctx.send(f"command \"{cmd}\" not found!")
 
 
-def prepare(bot: chat_bot.ChatBot):
+def prepare(bot: ChatBot):
     bot.add_cog(ModCommands(bot))

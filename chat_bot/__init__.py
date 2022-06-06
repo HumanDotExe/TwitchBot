@@ -1,15 +1,17 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
-from twitchio import Channel
+from twitchio.ext import commands
 
 from chat_bot.custom_commands import CustomCommands
 from chat_bot.mod_commands import ModCommands
 from data_types.stream import Stream
-from twitchio.ext import commands
-
 from data_types.types_collection import ChatBotModuleType
+
+if TYPE_CHECKING:
+    from twitchio import Channel, Message
 
 log = logging.getLogger(__name__)
 logging.getLogger("twitchio.websocket").disabled = True
@@ -18,12 +20,6 @@ logging.getLogger("twitchio.client").disabled = True
 
 class ChatBot(commands.Bot):
     __bot = None
-    __module_types_to_class = {
-        ChatBotModuleType.BASE: "chat_bot.base_commands",
-        ChatBotModuleType.MOD: "chat_bot.mod_commands",
-        ChatBotModuleType.CUSTOM: "chat_bot.custom_commands",
-        ChatBotModuleType.BEATSABER: "chat_bot.beatsaber_commands",
-    }
 
     @classmethod
     def set_bot(cls, bot: ChatBot):
@@ -37,7 +33,8 @@ class ChatBot(commands.Bot):
         log.debug("Bot Object created")
         # the .lower() is needed in twitchio 2.2.0 because of a bug that does not call event_ready if there
         # are uppercase characters in the channel list
-        self._channels = [stream.streamer.lower() for stream in Stream.get_streams() if stream.config['chat-bot']['enabled']]
+        self._channels = [stream.streamer.lower() for stream in Stream.get_streams() if
+                          stream.config['chat-bot']['enabled']]
         self._prefix = prefix
         self.display_nick = username
         self._bot_tags = {}
@@ -109,7 +106,7 @@ class ChatBot(commands.Bot):
             await self.create_bot_tag_for_channel(channel)
         return self._bot_tags[channel.name]
 
-    async def event_message(self, message):
+    async def event_message(self, message: Message):
         stream = Stream.get_stream(message.channel.name)
         if message.echo:
             stream.add_chat_message(message.content, await self.get_bot_tags_for_channel(message.channel), True)

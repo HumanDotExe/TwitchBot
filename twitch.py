@@ -1,16 +1,22 @@
+from __future__ import annotations
+
 import asyncio
 import logging
 import pathlib
 import signal
-from types import FrameType
+
+from typing import TYPE_CHECKING
 
 from beatsaber_request_websocket import BeatSaberIntegration
 from chat_bot import ChatBot
 from data_types.chat_message import ChatMessage
 from data_types.types_collection import ChatBotModuleType
-from twitch_api import TwitchAPI
 from data_types.twitch_bot_config import TwitchBotConfig
+from twitch_api import TwitchAPI
 from webserver import Webserver
+
+if TYPE_CHECKING:
+    from types import FrameType
 
 debug_file_handler = logging.FileHandler(pathlib.Path(__file__).resolve().parent / "debug" / "debug.log", mode='w')
 debug_file_handler.setFormatter(logging.Formatter('%(message)s'))

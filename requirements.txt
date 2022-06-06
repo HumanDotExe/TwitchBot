@@ -1,8 +1,7 @@
-twitchAPI~=2.5.3
-twitchio~=2.2.0
+twitchAPI==2.5.4
+twitchio==2.3.0
 aiohttp~=3.8.1
 PyYAML~=6.0
 schema~=0.7.5
-setuptools~=62.2.0
-websockets~=10.3
+setuptools==62.3.2
 simplematch~=1.3

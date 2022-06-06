@@ -2,17 +2,19 @@ from __future__ import annotations
 
 import datetime
 import logging
-import pathlib
-from typing import Union, List
-from uuid import UUID
-
-from aiohttp.web_ws import WebSocketResponse
+from typing import Union, List, TYPE_CHECKING
 
 from data_types.chat_message import ChatMessage
-from data_types.command_file import CommandConfig
+from data_types.command import Command
 from data_types.notification_resource import NotificationResource
 from data_types.per_stream_config import PerStreamConfig
-from data_types.types_collection import NotificationType, EventSubType, PubSubType
+from data_types.types_collection import NotificationType, ValidationException
+
+if TYPE_CHECKING:
+    from uuid import UUID
+    from pathlib import Path
+    from data_types.types_collection import EventSubType, PubSubType
+    from aiohttp.web_ws import WebSocketResponse
 
 log = logging.getLogger(__name__)
 
@@ -39,7 +41,7 @@ class Stream:
     def get_streams(cls) -> List[Stream]:
         return [stream for stream in cls.__streams.values()]
 
-    def __init__(self, streamer: str, user_id: str, base_path: pathlib.Path):
+    def __init__(self, streamer: str, user_id: str, base_path: Path):
         self.chat_overlay_settings = None
         self.streamer = streamer
         self.user_id = user_id
@@ -173,7 +175,8 @@ class Stream:
                 tags['color'] = self.config['chat-bot']['bot-color']
             else:
                 return
-        self.__chat_messages.append(ChatMessage(message, self.config['stream-overlays']['chat']['message-stays-for'], self.config['stream-overlays']['chat']['message-refresh-rate'], tags))
+        self.__chat_messages.append(ChatMessage(message, self.config['stream-overlays']['chat']['message-stays-for'],
+                                                self.config['stream-overlays']['chat']['message-refresh-rate'], tags))
 
     def remove_chat_message(self, message: ChatMessage):
         """Completely removes the chat message from the list as if it was never there"""

@@ -1,15 +1,19 @@
+from __future__ import annotations
+
 import base64
 import logging
 import mimetypes
-import pathlib
+from typing import TYPE_CHECKING
 
 from data_types.types_collection import NotificationType
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 log = logging.getLogger(__name__)
 
 
 class NotificationResource:
-
     audio_formats = [".mp3", ".wav", ".ogg"]
     image_formats = [".gif", ".jpg", ".jpeg", ".png", ".webp", ".apng"]
 
@@ -42,7 +46,7 @@ class NotificationResource:
     def set_message(self, message):
         self._message = message
 
-    def set_image(self, image_name, resource_path: pathlib.Path):
+    def set_image(self, image_name, resource_path: Path):
         image_path = resource_path / image_name
         if image_path.is_file() and image_path.suffix.lower() in NotificationResource.image_formats:
             if image_path.suffix.lower() == ".webp":
@@ -53,7 +57,7 @@ class NotificationResource:
                 self._image = base64.b64encode(open(image_path, 'rb').read()).decode('utf-8')
                 self._image_mime = image_mimetype
 
-    def set_sound(self, sound_name, resource_path: pathlib.Path):
+    def set_sound(self, sound_name, resource_path: Path):
         sound_path = resource_path / sound_name
         log.debug(f"sound path: {sound_path}")
         if sound_path.is_file() and sound_path.suffix.lower() in NotificationResource.audio_formats:

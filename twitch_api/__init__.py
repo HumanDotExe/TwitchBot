@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import logging
-import pathlib
-from typing import List
+from typing import List, TYPE_CHECKING
 
 from twitchAPI import Twitch, AuthScope, EventSub, EventSubSubscriptionError, PubSub, TwitchAuthorizationException, \
     TwitchBackendException, TwitchAPIException, PubSubListenTimeoutException, MissingScopeException, \
@@ -10,9 +9,12 @@ from twitchAPI import Twitch, AuthScope, EventSub, EventSubSubscriptionError, Pu
 
 from data_types.stream import Stream
 from data_types.twitch_bot_config import TwitchBotConfig
-from twitch_api.event_sub_callbacks import EventSubCallbacks
 from data_types.types_collection import EventSubType, PubSubType
+from twitch_api.event_sub_callbacks import EventSubCallbacks
 from twitch_api.pubsub_callbacks import PubSubCallbacks
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 logging.getLogger("twitchAPI.eventsub").disabled = True
 logging.getLogger("twitchAPI.twitch").disabled = True
@@ -36,13 +38,15 @@ class TwitchAPI:
         return cls.__twitch_api
 
     @staticmethod
-    def user_refresh(token: str, refresh_token: str):
+    def user_refresh(_: str, refresh_token: str):
         log.debug("User token refreshed")
-        if TwitchBotConfig.get_config() is not None and refresh_token != TwitchBotConfig.get_config()['USER']['REFRESH_TOKEN']:
+        if TwitchBotConfig.get_config() is not None and refresh_token != TwitchBotConfig.get_config()['USER'][
+            'REFRESH_TOKEN']:
             log.debug(f"New token: {refresh_token}")
             TwitchBotConfig.get_config()['USER']['REFRESH_TOKEN'] = refresh_token
 
-    def __init__(self, client_id: str, client_secret: str, refresh_token: str, monitored_streams: List[str], base_path: pathlib.Path, user_auth_scope: List[AuthScope] = None, app_auth_scope: List[AuthScope] = None):
+    def __init__(self, client_id: str, client_secret: str, refresh_token: str, monitored_streams: List[str],
+                 base_path: Path, user_auth_scope: List[AuthScope] = None, app_auth_scope: List[AuthScope] = None):
         log.debug("Twitch API Object created")
         if user_auth_scope is None:
             user_auth_scope = [AuthScope.CHANNEL_MODERATE]
@@ -70,7 +74,8 @@ class TwitchAPI:
         self._twitch.authenticate_app(self._app_auth_scope)
         log.info("User authentication")
         try:
-            self._token, self._refresh_token = refresh_access_token(self._refresh_token, self._client_id, self._client_secret)
+            self._token, self._refresh_token = refresh_access_token(self._refresh_token, self._client_id,
+                                                                    self._client_secret)
         except InvalidRefreshTokenException:
             log.warning(f"Invalid refresh token")
             auth = UserAuthenticator(self._twitch, self._user_auth_scope, force_verify=False)
@@ -124,15 +129,27 @@ class TwitchAPI:
 
         for stream in Stream.get_streams():
             try:
-                stream.set_callback_id(self._event_sub_hook.listen_stream_online(stream.user_id, EventSubCallbacks.on_stream_online), EventSubType.STREAM_ONLINE)
-                stream.set_callback_id(self._event_sub_hook.listen_stream_offline(stream.user_id, EventSubCallbacks.on_stream_offline), EventSubType.STREAM_OFFLINE)
-                stream.set_callback_id(self._event_sub_hook.listen_channel_update(stream.user_id, EventSubCallbacks.on_channel_update), EventSubType.CHANNEL_UPDATE)
-                stream.set_callback_id(self._event_sub_hook.listen_channel_follow(stream.user_id, EventSubCallbacks.on_channel_follow), EventSubType.CHANNEL_FOLLOW)
+                stream.set_callback_id(
+                    self._event_sub_hook.listen_stream_online(stream.user_id, EventSubCallbacks.on_stream_online),
+                    EventSubType.STREAM_ONLINE)
+                stream.set_callback_id(
+                    self._event_sub_hook.listen_stream_offline(stream.user_id, EventSubCallbacks.on_stream_offline),
+                    EventSubType.STREAM_OFFLINE)
+                stream.set_callback_id(
+                    self._event_sub_hook.listen_channel_update(stream.user_id, EventSubCallbacks.on_channel_update),
+                    EventSubType.CHANNEL_UPDATE)
+                stream.set_callback_id(
+                    self._event_sub_hook.listen_channel_follow(stream.user_id, EventSubCallbacks.on_channel_follow),
+                    EventSubType.CHANNEL_FOLLOW)
             except EventSubSubscriptionError:
                 log.warning(f"Something went wrong here: No auth for {stream.streamer}.")
             try:
-                stream.set_callback_id(self._event_sub_hook.listen_channel_ban(stream.user_id, EventSubCallbacks.on_ban), EventSubType.CHANNEL_BAN)
-                stream.set_callback_id(self._event_sub_hook.listen_channel_unban(stream.user_id, EventSubCallbacks.on_unban), EventSubType.CHANNEL_UNBAN)
+                stream.set_callback_id(
+                    self._event_sub_hook.listen_channel_ban(stream.user_id, EventSubCallbacks.on_ban),
+                    EventSubType.CHANNEL_BAN)
+                stream.set_callback_id(
+                    self._event_sub_hook.listen_channel_unban(stream.user_id, EventSubCallbacks.on_unban),
+                    EventSubType.CHANNEL_UNBAN)
             except EventSubSubscriptionError:
                 log.warning(f"{stream.streamer} does not have the app authorized.")
 
@@ -144,7 +161,9 @@ class TwitchAPI:
         self._pubsub.start()
         for stream in Stream.get_streams():
             try:
-                stream.set_pubsub_uuid(self._pubsub.listen_chat_moderator_actions(user_id, stream.user_id, PubSubCallbacks.on_chat_moderator_action), PubSubType.CHAT_MODERATOR_ACTIONS)
+                stream.set_pubsub_uuid(self._pubsub.listen_chat_moderator_actions(user_id, stream.user_id,
+                                                                                  PubSubCallbacks.on_chat_moderator_action),
+                                       PubSubType.CHAT_MODERATOR_ACTIONS)
             except MissingScopeException:
                 log.error(f"{stream.streamer} is missing user authentication")
             except TwitchAuthorizationException:

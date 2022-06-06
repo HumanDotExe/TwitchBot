@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from data_types.types_collection import ChatMessageType
 
 
@@ -74,7 +76,7 @@ class ChatMessage:
         self.__is_deleted = True
 
     @classmethod
-    def format_user(cls, tags):
+    def format_user(cls, tags: dict):
         user = ""
         badges = tags['badges'].split(',')
         if len(badges) > 0 and len(cls.__global_badges) > 0:
@@ -90,7 +92,7 @@ class ChatMessage:
         return user
 
     @classmethod
-    def replace_twitch_emotes(cls, message, tags):
+    def replace_twitch_emotes(cls, message: str, tags: dict):
         if len(tags['emotes']) > 0:
             emotes = tags['emotes'].split("/")
             replace = {}
@@ -101,7 +103,7 @@ class ChatMessage:
                     replace[current_emote['name']] = current_emote['images']['url_1x']
                 else:
                     from_str, to_str = emote_parts[1].split("-")
-                    name = message[int(from_str):int(to_str)+1]
+                    name = message[int(from_str):int(to_str) + 1]
                     url = f"https://static-cdn.jtvnw.net/emoticons/v2/{emote_parts[0]}/default/light/1.0"
                     replace[name] = url
 
