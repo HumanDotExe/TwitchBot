@@ -4,7 +4,6 @@ from aiohttp import web
 import logging
 
 from beatsaber_request_websocket.beatsaber_integration_callbacks import websocket_handler
-from data_types.stream import Stream
 
 log = logging.getLogger(__name__)
 
@@ -25,6 +24,7 @@ class BeatSaberIntegration:
         return cls.__beatsaber
 
     def __init__(self, path: str = "/beatsaber"):
+        from data_types.stream import Stream
         log.debug("Beat Saber integration object created")
 
         self._path = path
@@ -46,6 +46,7 @@ class BeatSaberIntegration:
         log.debug("Site started")
 
     async def stop_beatsaber_integration(self):
+        from data_types.stream import Stream
         log.info("Stopping Beat Saber Integration")
         for stream in Stream.get_streams():
             await stream.beatsaber_websocket.close()

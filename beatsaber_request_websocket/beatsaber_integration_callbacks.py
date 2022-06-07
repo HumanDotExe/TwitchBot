@@ -9,7 +9,6 @@ from simplematch import test, match
 if TYPE_CHECKING:
     from aiohttp.web_request import Request
 
-from data_types.stream import Stream
 from data_types.types_collection import BeatSaberMessageType
 from utils.string_and_dict_operations import strip_whitespaces
 
@@ -18,6 +17,7 @@ debug = logging.getLogger("debug-logger")
 
 
 async def websocket_handler(request: Request):
+    from data_types.stream import Stream
     stream = Stream.get_stream(request.rel_url.name)
     if stream:
         stream.set_beatsaber_websocket(web.WebSocketResponse())
