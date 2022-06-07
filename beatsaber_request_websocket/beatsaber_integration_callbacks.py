@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-import aiohttp
-from aiohttp import web
-
-import simplematch
-
 import logging
+from typing import TYPE_CHECKING
 
-from aiohttp.web_request import Request
+from aiohttp import web, WSMsgType
+from simplematch import test, match
+
+if TYPE_CHECKING:
+    from aiohttp.web_request import Request
 
 from data_types.stream import Stream
 from data_types.types_collection import BeatSaberMessageType
@@ -26,16 +26,17 @@ async def websocket_handler(request: Request):
 
         async for msg in stream.beatsaber_websocket:
             log.debug(msg)
-            if msg.type == aiohttp.WSMsgType.CLOSED:
+            if msg.type == WSMsgType.CLOSED:
                 pass
-            elif msg.type == aiohttp.WSMsgType.TEXT:
+            elif msg.type == WSMsgType.TEXT:
                 message = str(msg.data).encode('utf-8').decode('utf-8-sig')
-                if message_to_dict(message) is None:
+                if message_to_dict(message) is {}:
                     debug.info(f"beatsaber: {message}")
                 from chat_bot import ChatBot
                 await ChatBot.get_bot().send(message, stream.streamer)
-            elif msg.type == aiohttp.WSMsgType.ERROR:
-                log.error(f"Beat Saber Websocket for stream {stream.streamer} closed with exception: {stream.beatsaber_websocket.exception()}")
+            elif msg.type == WSMsgType.ERROR:
+                log.error(
+                    f"Beat Saber Websocket for stream {stream.streamer} closed with exception: {stream.beatsaber_websocket.exception()}")
 
     print('Websocket connection closed')
 
@@ -54,8 +55,8 @@ template_dict = {
 }
 
 
-def message_to_dict(message: str):
+def message_to_dict(message: str) -> dict:
     for message_type in BeatSaberMessageType:
-        if message_type in template_dict and simplematch.test(template_dict[message_type], message):
-            return strip_whitespaces({**{"type": message_type}, **simplematch.match(template_dict[message_type], message)})
-    return None
+        if message_type in template_dict and test(template_dict[message_type], message):
+            return strip_whitespaces({**{"type": message_type}, **match(template_dict[message_type], message)})
+    return {}

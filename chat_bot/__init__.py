@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
+
+from twitchio.ext import commands
 
 from chat_bot.custom_commands import CustomCommands
 from chat_bot.mod_commands import ModCommands
 from data_types.stream import Stream
-from twitchio.ext import commands
-
 from data_types.types_collection import ChatBotModuleType
+
+if TYPE_CHECKING:
+    from twitchio import Channel, Message
 
 log = logging.getLogger(__name__)
 logging.getLogger("twitchio.websocket").disabled = True
@@ -16,12 +20,6 @@ logging.getLogger("twitchio.client").disabled = True
 
 class ChatBot(commands.Bot):
     __bot = None
-    __module_types_to_class = {
-        ChatBotModuleType.BASE: "chat_bot.base_commands",
-        ChatBotModuleType.MOD: "chat_bot.mod_commands",
-        ChatBotModuleType.CUSTOM: "chat_bot.custom_commands",
-        ChatBotModuleType.BEATSABER: "chat_bot.beatsaber_commands",
-    }
 
     @classmethod
     def set_bot(cls, bot: ChatBot):
@@ -33,10 +31,10 @@ class ChatBot(commands.Bot):
 
     def __init__(self, username: str, oauth: str, prefix: str = "!"):
         log.debug("Bot Object created")
-        streams = Stream.get_streams()
         # the .lower() is needed in twitchio 2.2.0 because of a bug that does not call event_ready if there
         # are uppercase characters in the channel list
-        self._channels = [stream.streamer.lower() for stream in streams if stream.config['chat-bot']['enabled']]
+        self._channels = [stream.streamer.lower() for stream in Stream.get_streams() if
+                          stream.config['chat-bot']['enabled']]
         self._prefix = prefix
         self.display_nick = username
         self._bot_tags = {}
@@ -52,19 +50,19 @@ class ChatBot(commands.Bot):
         self.load_module("chat_bot.test_commands")
 
     def load_module_by_type(self, module_type: ChatBotModuleType):
-        if module_type in self.__module_types_to_class and self.__module_types_to_class[module_type] not in self._modules:
-            self.load_module(self.__module_types_to_class[module_type])
+        if module_type in ChatBotModuleType and module_type.value not in self._modules:
+            self.load_module(module_type.value)
 
     def unload_module_by_type(self, module_type: ChatBotModuleType):
-        if module_type in self.__module_types_to_class and self.__module_types_to_class[module_type] in self._modules:
-            self.unload_module(self.__module_types_to_class[module_type])
+        if module_type in ChatBotModuleType and module_type.value not in self._modules:
+            self.unload_module(module_type.value)
 
     def reload_module_by_type(self, module_type: ChatBotModuleType):
-        if module_type in self.__module_types_to_class and self.__module_types_to_class[module_type] in self._modules:
-            self.reload_module(self.__module_types_to_class[module_type])
+        if module_type in ChatBotModuleType and module_type.value not in self._modules:
+            self.reload_module(module_type.value)
 
     def unload_all_modules(self):
-        for module_type in self.__module_types_to_class:
+        for module_type in ChatBotModuleType:
             self.unload_module_by_type(module_type)
 
     async def start_chat_bot(self):
@@ -92,7 +90,7 @@ class ChatBot(commands.Bot):
                 await channel.send(stream.config['chat-bot']['online-message'].format(bot_name=self.display_nick))
         log.info(f'{self.display_nick} online!')
 
-    async def create_bot_tag_for_stream(self, stream: Stream, channel):
+    async def create_bot_tag_for_channel(self, channel: Channel):
         chatter = channel.get_chatter(self.display_nick)
         if chatter is not None:
             badges = ""
@@ -101,17 +99,17 @@ class ChatBot(commands.Bot):
                     badges += f"{key}/{value}"
                 else:
                     badges += f",{key}/{value}"
-            self._bot_tags[stream.streamer] = {'badges': badges, 'display-name': chatter.display_name,
-                                               'color': stream.config['chat-bot']['bot-color'], 'emotes': ''}
+            self._bot_tags[channel.name] = {'badges': badges, 'display-name': chatter.display_name, 'emotes': ''}
 
-    async def event_message(self, message):
+    async def get_bot_tags_for_channel(self, channel: Channel) -> dict:
+        if channel.name not in self._bot_tags:
+            await self.create_bot_tag_for_channel(channel)
+        return self._bot_tags[channel.name]
+
+    async def event_message(self, message: Message):
         stream = Stream.get_stream(message.channel.name)
         if message.echo:
-            if stream.config['stream-overlays']['chat']['include-command-output']:
-                if stream.streamer not in self._bot_tags:
-                    await self.create_bot_tag_for_stream(stream, message.channel)
-                if stream.streamer in self._bot_tags:
-                    stream.add_chat_message(message.content, self._bot_tags[stream.streamer])
+            stream.add_chat_message(message.content, await self.get_bot_tags_for_channel(message.channel), True)
             stream.write_into_chatlog(self.display_nick, message.content)
             log.debug(f"{message.channel.name} -> {self.display_nick}: {message.content}")
             return

@@ -1,16 +1,22 @@
+from __future__ import annotations
+
 import asyncio
 import logging
 import pathlib
 import signal
-from types import FrameType
+
+from typing import TYPE_CHECKING
 
 from beatsaber_request_websocket import BeatSaberIntegration
 from chat_bot import ChatBot
 from data_types.chat_message import ChatMessage
 from data_types.types_collection import ChatBotModuleType
-from twitch_api import TwitchAPI
 from data_types.twitch_bot_config import TwitchBotConfig
+from twitch_api import TwitchAPI
 from webserver import Webserver
+
+if TYPE_CHECKING:
+    from types import FrameType
 
 debug_file_handler = logging.FileHandler(pathlib.Path(__file__).resolve().parent / "debug" / "debug.log", mode='w')
 debug_file_handler.setFormatter(logging.Formatter('%(message)s'))
@@ -39,6 +45,9 @@ def startup():
         TwitchAPI.get_twitch_api().setup_pubsub(TwitchAPI.get_twitch_api().get_user_id_by_name(config['BOT']['NICK']))
         ChatMessage.set_global_emotes(TwitchAPI.get_twitch_api().get_global_chat_emotes())
         ChatMessage.set_global_badges(TwitchAPI.get_twitch_api().get_global_chat_badges())
+    else:
+        ChatMessage.set_global_emotes({})
+        ChatMessage.set_global_badges({})
 
     log.info("Setting up bot")
     ChatBot.set_bot(ChatBot(config['BOT']['NICK'], config['BOT']['CHAT_OAUTH']))

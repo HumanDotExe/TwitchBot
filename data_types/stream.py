@@ -2,16 +2,19 @@ from __future__ import annotations
 
 import datetime
 import logging
-import pathlib
-from typing import Union, List
-from uuid import UUID
-
-from aiohttp.web_ws import WebSocketResponse
+from typing import Union, List, TYPE_CHECKING
 
 from data_types.chat_message import ChatMessage
+from data_types.command import Command
 from data_types.notification_resource import NotificationResource
 from data_types.per_stream_config import PerStreamConfig
-from data_types.types_collection import NotificationType, EventSubType, PubSubType
+from data_types.types_collection import NotificationType, ValidationException
+
+if TYPE_CHECKING:
+    from uuid import UUID
+    from pathlib import Path
+    from data_types.types_collection import EventSubType, PubSubType
+    from aiohttp.web_ws import WebSocketResponse
 
 log = logging.getLogger(__name__)
 
@@ -38,7 +41,7 @@ class Stream:
     def get_streams(cls) -> List[Stream]:
         return [stream for stream in cls.__streams.values()]
 
-    def __init__(self, streamer: str, user_id: str, base_path: pathlib.Path):
+    def __init__(self, streamer: str, user_id: str, base_path: Path):
         self.chat_overlay_settings = None
         self.streamer = streamer
         self.user_id = user_id
@@ -109,8 +112,12 @@ class Stream:
 
     def __setup_custom_commands(self):
         command_files = self.paths["resources"].glob('**/*' + self.__command_suffix)
-        for command in command_files:
-            self.commands[command.name.replace(self.__command_suffix, '')] = command.read_text()
+        for command_file in command_files:
+            try:
+                command = Command(command_file)
+                self.commands[command.name] = command
+            except ValidationException as e:
+                log.warning(f"Problem loading command {command_file.name}: {e}")
 
     def stream_started(self, start: str):
         self.__is_streaming = True
@@ -163,8 +170,14 @@ class Stream:
                 time = datetime.datetime.now().time().isoformat()
                 f.write(f"{time}:{user}: {message}\n")
 
-    def add_chat_message(self, message: str, tags: dict):
-        self.__chat_messages.append(ChatMessage(message, self.config['stream-overlays']['chat']['message-stays-for'], self.config['stream-overlays']['chat']['message-refresh-rate'], tags))
+    def add_chat_message(self, message: str, tags: dict, is_bot_message: bool = False):
+        if is_bot_message:
+            if self.config['stream-overlays']['chat']['include-command-output']:
+                tags['color'] = self.config['chat-bot']['bot-color']
+            else:
+                return
+        self.__chat_messages.append(ChatMessage(message, self.config['stream-overlays']['chat']['message-stays-for'],
+                                                self.config['stream-overlays']['chat']['message-refresh-rate'], tags))
 
     def remove_chat_message(self, message: ChatMessage):
         """Completely removes the chat message from the list as if it was never there"""

@@ -77,10 +77,10 @@ class BeatSaberMessageType(Enum):
 
 
 class ChatBotModuleType(Enum):
-    BASE = 0
-    CUSTOM = 1
-    MOD = 2
-    BEATSABER = 3
+    BASE = "chat_bot.base_commands"
+    CUSTOM = "chat_bot.custom_commands"
+    MOD = "chat_bot.mod_commands"
+    BEATSABER = "chat_bot.beatsaber_commands"
 
 
 class InvalidDataException(Exception):
@@ -88,4 +88,8 @@ class InvalidDataException(Exception):
 
 
 class ConfigErrorException(Exception):
+    pass
+
+
+class ValidationException(Exception):
     pass

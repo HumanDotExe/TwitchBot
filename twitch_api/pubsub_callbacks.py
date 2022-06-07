@@ -1,9 +1,13 @@
+from __future__ import annotations
+
 import logging
-from typing import Union
-from uuid import UUID
+from typing import Union, TYPE_CHECKING
 
 from data_types.stream import Stream
 from data_types.types_collection import ModerationActionType, PubSubType
+
+if TYPE_CHECKING:
+    from uuid import UUID
 
 log = logging.getLogger(__name__)
 debug_log = logging.getLogger("debug-logger")
@@ -37,6 +41,3 @@ class PubSubCallbacks:
                 return s
         log.warning(f"UUID {uuid} does not belong to any stream but exists")
         return None
-
-
-

@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import logging
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import yaml
-from schema import Schema, And, Or, Use, Optional, SchemaError
+from schema import Schema, And, Or, Optional, SchemaError
+
 from utils.string_and_dict_operations import clean_empty
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 log = logging.getLogger(__name__)
 
