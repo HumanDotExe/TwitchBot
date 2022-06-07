@@ -29,7 +29,8 @@ class PerStreamConfig:
                     Optional('bot-color', default="#FFFFFF"): And(str),
                     'online-message': And(str),
                     Optional('offline-message', default=""): And(str),
-                    Optional('ignore-commands', default=[]): And(list)
+                    Optional('ignore-commands', default=[]): And(list),
+                    Optional('refresh-token', default=None): Or(str, None)
                 },
             'stream-overlays': {
                 'notifications': {
