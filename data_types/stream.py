@@ -238,6 +238,14 @@ class Stream:
         return self.__is_streaming
 
     @property
+    def is_mature(self):
+        return self.__is_mature
+
+    @property
+    def language(self):
+        return self.__language
+
+    @property
     def uptime(self):
         if self.__is_streaming:
             return datetime.datetime.utcnow() - self.__stream_start
