@@ -30,6 +30,7 @@ class PerStreamConfig:
                     'online-message': And(str),
                     Optional('offline-message', default=""): And(str),
                     Optional('ignore-commands', default=[]): And(list),
+                    Optional('enable-channel-edit-commands', default=False): And(bool),
                     Optional('refresh-token', default=None): Or(str, None)
                 },
             'stream-overlays': {

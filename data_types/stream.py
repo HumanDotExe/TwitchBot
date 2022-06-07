@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 import logging
-from typing import Union, List, TYPE_CHECKING
+from typing import Union, List, TYPE_CHECKING, Optional
 
 from data_types.chat_message import ChatMessage
 from data_types.notification_resource import NotificationResource
@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from pathlib import Path
     from data_types.types_collection import EventSubType, PubSubType
     from aiohttp.web_ws import WebSocketResponse
+    from twitch_api.twitch_user_api import TwitchUserAPI
 
 log = logging.getLogger(__name__)
 
@@ -50,6 +51,8 @@ class Stream:
         self.__title = None
         self.__is_mature = None
         self.__language = None
+
+        self.__twitch_user_api: Optional[TwitchUserAPI] = None
 
         self.config = None
         self.__notifications = {}
@@ -96,6 +99,12 @@ class Stream:
         log.info(f"Saving Stream settings for {self.streamer}")
 
         PerStreamConfig.save_config(self.paths["config"], self.config)
+
+    def get_twitch_user_api(self) -> Optional[TwitchUserAPI]:
+        return self.__twitch_user_api
+
+    def set_twitch_user_api(self, twitch_api: TwitchUserAPI):
+        self.__twitch_user_api = twitch_api
 
     def __setup_notifications(self):
         notifications = self.config['stream-overlays']['notifications']

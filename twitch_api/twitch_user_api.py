@@ -1,30 +1,20 @@
 from __future__ import annotations
 
 import logging
-from typing import List, Optional
+
+from typing import List, TYPE_CHECKING
 
 from twitchAPI import AuthScope, Twitch, refresh_access_token, InvalidRefreshTokenException, UserAuthenticator, \
     MissingScopeException
 
-from data_types.stream import Stream
+if TYPE_CHECKING:
+    from data_types.stream import Stream
 
 log = logging.getLogger(__name__)
 
 
 class TwitchUserAPI:
-    __user_apis = {}
-
-    @classmethod
-    def get_twitch_api(cls, streamer: str) -> Optional[TwitchUserAPI]:
-        if streamer.lower() in cls.__user_apis:
-            return cls.__user_apis[streamer.lower()]
-        return None
-
-    @classmethod
-    def add_twitch_api(cls, twitch: TwitchUserAPI):
-        cls.__user_apis[twitch._streamer.lower()] = twitch
-
-    def user_refresh(self, token: str, refresh_token: str):
+    def user_refresh(self, _: str, refresh_token: str):
         log.debug("User token refreshed")
         from data_types.stream import Stream
         stream = Stream.get_stream(self._streamer)
@@ -46,10 +36,9 @@ class TwitchUserAPI:
         self.authenticate()
 
     def authenticate(self):
-        log.info("User Specific Authentication started")
+        log.info(f"User Specific Authentication for user {self._streamer} started")
         self._twitch = Twitch(self._client_id, self._client_secret)
         self._twitch.user_auth_refresh_callback = self.user_refresh
-        log.info("User Specific User authentication")
         from data_types.stream import Stream
         refresh_token = Stream.get_stream(self._streamer).config["chat-bot"]["refresh-token"]
         try:

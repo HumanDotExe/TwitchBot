@@ -8,7 +8,6 @@ from twitchio.ext import commands
 from chat_bot.custom_cog import CustomCog
 from chat_bot.custom_commands import CustomCommands
 from data_types.types_collection import NotificationType
-from twitch_api.twitch_user_api import TwitchUserAPI
 
 if TYPE_CHECKING:
     from chat_bot import ChatBot
@@ -116,20 +115,24 @@ class ModCommands(CustomCog):
     @commands.command(name="set-title")
     async def set_title(self, ctx: commands.Context, title: str):
         stream = self.Stream.get_stream(ctx.channel.name)
-        if ctx.author.is_mod and ctx.command.name not in stream.config['chat-bot']['ignore-commands'] or ctx.author.is_broadcaster:
-            if TwitchUserAPI.get_twitch_api(ctx.channel.name).set_title(stream, title):
-                await ctx.send(f"title set to \"{title}\" by {ctx.author.name}")
-            else:
-                await ctx.send("could not set title")
+        if ctx.author.is_mod and ctx.command.name not in stream.config['chat-bot'][
+            'ignore-commands'] or ctx.author.is_broadcaster:
+            if stream.config["chat-bot"]["enable-channel-edit-commands"] and stream.get_twitch_user_api() is not None:
+                if stream.get_twitch_user_api().set_title(stream, title):
+                    await ctx.send(f"title set to \"{title}\" by {ctx.author.display_name}")
+                else:
+                    await ctx.send("could not set title")
 
     @commands.command(name="set-game")
     async def set_game(self, ctx: commands.Context, game: str):
         stream = self.Stream.get_stream(ctx.channel.name)
-        if ctx.author.is_mod and ctx.command.name not in stream.config['chat-bot']['ignore-commands'] or ctx.author.is_broadcaster:
-            if TwitchUserAPI.get_twitch_api(ctx.channel.name).set_game(stream, game):
-                await ctx.send(f"game set to \"{game}\" by {ctx.author.name}")
-            else:
-                await ctx.send("could not set game")
+        if ctx.author.is_mod and ctx.command.name not in stream.config['chat-bot'][
+            'ignore-commands'] or ctx.author.is_broadcaster:
+            if stream.config["chat-bot"]["enable-channel-edit-commands"] and stream.get_twitch_user_api() is not None:
+                if stream.get_twitch_user_api().set_game(stream, game):
+                    await ctx.send(f"game set to \"{game}\" by {ctx.author.display_name}")
+                else:
+                    await ctx.send("could not set game")
 
 
 def prepare(bot: ChatBot):

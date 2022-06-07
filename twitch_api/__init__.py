@@ -95,15 +95,17 @@ class TwitchAPI:
 
     def collect_stream_info(self):
         log.info("Collecting User Info and Stream Data for monitored streams")
+        from twitch_api.twitch_user_api import TwitchUserAPI
+
         stream_info = self._twitch.get_streams(user_login=self._monitored_streams)
 
-        from twitch_api.twitch_user_api import TwitchUserAPI
         for info in stream_info['data']:
             stream = Stream(info['user_name'], info['id'], self._base_path)
             stream.stream_started(info['started_at'])
             stream.stream_info_changed(info['title'], info['game_name'], info['is_mature'], info['language'])
             Stream.add_stream(stream)
-            TwitchUserAPI.add_twitch_api(TwitchUserAPI(self._client_id, self._client_secret, stream.streamer, None))
+            if stream.config["chat-bot"]["enable-channel-edit-commands"]:
+                stream.set_twitch_user_api(TwitchUserAPI(self._client_id, self._client_secret, stream.streamer))
 
         user_info = self._twitch.get_users(logins=self._monitored_streams)
         for info in user_info['data']:
@@ -111,7 +113,8 @@ class TwitchAPI:
             if stream is None:
                 stream = Stream(info['display_name'], info['id'], self._base_path)
                 Stream.add_stream(stream)
-                TwitchUserAPI.add_twitch_api(TwitchUserAPI(self._client_id, self._client_secret, stream.streamer, None))
+                if stream.config["chat-bot"]["enable-channel-edit-commands"]:
+                    stream.set_twitch_user_api(TwitchUserAPI(self._client_id, self._client_secret, stream.streamer))
 
     def get_global_chat_emotes(self):
         log.info("Retrieving chat emotes")
