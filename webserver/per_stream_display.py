@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 
 from aiohttp import web
 
-from data_types.stream import Stream
 from utils import timedelta
 
 if TYPE_CHECKING:
@@ -17,6 +16,7 @@ default_html = "<html><head><meta charset=\"UTF-8\"/><meta http-equiv=\"refresh\
 
 
 async def display_uptime(request: Request):
+    from data_types.stream import Stream
     if request.rel_url.query.get('stream', '') in Stream.get_channels():
         stream = Stream.get_stream(request.rel_url.query.get('stream', ''))
         uptime = stream.uptime
@@ -37,6 +37,7 @@ async def display_uptime(request: Request):
 
 
 async def display_notifications(request: Request):
+    from data_types.stream import Stream
     if request.rel_url.query.get('stream', '') in Stream.get_channels():
         stream = Stream.get_stream(request.rel_url.query.get('stream', ''))
         if len(stream.queue) > 0 and stream.current_cooldown == 0:
@@ -64,6 +65,7 @@ async def display_notifications(request: Request):
 
 
 async def display_chat_messages(request: Request):
+    from data_types.stream import Stream
     if request.rel_url.query.get('stream', '') in Stream.get_channels():
         stream = Stream.get_stream(request.rel_url.query.get('stream', ''))
         content = "<div id='chat' width=500px style='{word-break: break-word;}'>"

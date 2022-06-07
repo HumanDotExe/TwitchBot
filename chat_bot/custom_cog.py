@@ -14,6 +14,8 @@ if TYPE_CHECKING:
 
 
 class CustomCog(commands.Cog):
+    # this import is used by the subclasses of CustomCog
+    from data_types.stream import Stream
 
     @staticmethod
     def get_commands():

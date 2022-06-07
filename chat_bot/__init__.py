@@ -5,9 +5,6 @@ from typing import TYPE_CHECKING
 
 from twitchio.ext import commands
 
-from chat_bot.custom_commands import CustomCommands
-from chat_bot.mod_commands import ModCommands
-from data_types.stream import Stream
 from data_types.types_collection import ChatBotModuleType
 
 if TYPE_CHECKING:
@@ -19,6 +16,7 @@ logging.getLogger("twitchio.client").disabled = True
 
 
 class ChatBot(commands.Bot):
+    from data_types.stream import Stream
     __bot = None
 
     @classmethod
@@ -33,7 +31,7 @@ class ChatBot(commands.Bot):
         log.debug("Bot Object created")
         # the .lower() is needed in twitchio 2.2.0 because of a bug that does not call event_ready if there
         # are uppercase characters in the channel list
-        self._channels = [stream.streamer.lower() for stream in Stream.get_streams() if
+        self._channels = [stream.streamer.lower() for stream in self.Stream.get_streams() if
                           stream.config['chat-bot']['enabled']]
         self._prefix = prefix
         self.display_nick = username
@@ -72,7 +70,7 @@ class ChatBot(commands.Bot):
 
     async def send_chat_message_on_stop(self):
         for channel in self.connected_channels:
-            stream = Stream.get_stream(channel.name)
+            stream = self.Stream.get_stream(channel.name)
             offline_message = stream.config['chat-bot']['offline-message'].format(bot_name=self.display_nick)
             if len(offline_message) > 0:
                 await channel.send(offline_message)
@@ -84,7 +82,7 @@ class ChatBot(commands.Bot):
         log.debug("ChatBot stopped")
 
     async def event_ready(self):
-        for stream in Stream.get_streams():
+        for stream in self.Stream.get_streams():
             channel = self.get_channel(stream.streamer)
             if channel:
                 await channel.send(stream.config['chat-bot']['online-message'].format(bot_name=self.display_nick))
@@ -107,7 +105,7 @@ class ChatBot(commands.Bot):
         return self._bot_tags[channel.name]
 
     async def event_message(self, message: Message):
-        stream = Stream.get_stream(message.channel.name)
+        stream = self.Stream.get_stream(message.channel.name)
         if message.echo:
             stream.add_chat_message(message.content, await self.get_bot_tags_for_channel(message.channel), True)
             stream.write_into_chatlog(self.display_nick, message.content)
@@ -131,3 +129,7 @@ class ChatBot(commands.Bot):
         channel = self.get_channel(channel_name)
         if channel:
             await channel.send("/announce " + message)
+
+    @property
+    def prefix(self):
+        return self._prefix

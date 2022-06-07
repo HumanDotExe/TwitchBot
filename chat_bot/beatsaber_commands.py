@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING
 from twitchio.ext import commands
 
 from chat_bot.custom_cog import CustomCog
-from data_types.stream import Stream
 
 if TYPE_CHECKING:
     from chat_bot import ChatBot
@@ -29,7 +28,7 @@ class BeatSaberCommands(CustomCog):
 
     @commands.command(name="bsr", aliases=["queue", "remove", "detail"])
     async def beat_saber_normal_command(self, ctx: commands.Context):
-        stream = Stream.get_stream(ctx.channel.name)
+        stream = self.Stream.get_stream(ctx.channel.name)
         if stream.beatsaber_websocket is not None:
             await stream.beatsaber_websocket.send_json(self.message_to_json(ctx.message))
             log.debug(self.message_to_json(ctx.message))
@@ -37,7 +36,7 @@ class BeatSaberCommands(CustomCog):
     @commands.command(name="open", aliases=["close"])
     async def beat_saber_mod_command(self, ctx: commands.Context):
         if ctx.author.is_mod:
-            stream = Stream.get_stream(ctx.channel.name)
+            stream = self.Stream.get_stream(ctx.channel.name)
             if stream.beatsaber_websocket is not None:
                 await stream.beatsaber_websocket.send_json(self.message_to_json(ctx.message))
                 log.debug(self.message_to_json(ctx.message))

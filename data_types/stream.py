@@ -5,7 +5,6 @@ import logging
 from typing import Union, List, TYPE_CHECKING
 
 from data_types.chat_message import ChatMessage
-from data_types.command import Command
 from data_types.notification_resource import NotificationResource
 from data_types.per_stream_config import PerStreamConfig
 from data_types.types_collection import NotificationType, ValidationException
@@ -111,6 +110,7 @@ class Stream:
                 self.__notifications[notification_type].set_sound(sound_name, self.paths["resources"])
 
     def __setup_custom_commands(self):
+        from data_types.command import Command
         command_files = self.paths["resources"].glob('**/*' + self.__command_suffix)
         for command_file in command_files:
             try:

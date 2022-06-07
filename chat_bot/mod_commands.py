@@ -5,11 +5,9 @@ from typing import Union, TYPE_CHECKING
 
 from twitchio.ext import commands
 
-from chat_bot import CustomCommands
 from chat_bot.custom_cog import CustomCog
-from data_types.stream import Stream
+from chat_bot.custom_commands import CustomCommands
 from data_types.types_collection import NotificationType
-from twitch_api import TwitchAPI
 from twitch_api.twitch_user_api import TwitchUserAPI
 
 if TYPE_CHECKING:
@@ -28,7 +26,7 @@ class ModCommands(CustomCog):
 
     @commands.command(name="test")
     async def test(self, ctx: commands.Context, notify_type: str = "test", name: str = None):
-        stream = Stream.get_stream(ctx.channel.name)
+        stream = self.Stream.get_stream(ctx.channel.name)
         if ctx.command.name not in stream.config['chat-bot']['ignore-commands']:
             if ctx.author.is_mod:
                 notification_type = NotificationType.FOLLOW
@@ -46,7 +44,7 @@ class ModCommands(CustomCog):
     @commands.command(name="reload")
     async def reload(self, ctx: commands.Context):
         if ctx.author.is_mod:
-            stream = Stream.get_stream(ctx.channel.name)
+            stream = self.Stream.get_stream(ctx.channel.name)
             stream.load_resources_and_settings()
             cog = self.bot.get_cog("CustomCommands")
             if isinstance(cog, CustomCommands):
@@ -56,7 +54,7 @@ class ModCommands(CustomCog):
     @commands.command(name="ban_queue")
     async def ban_queue(self, ctx: commands.Context, option: str = None, value: Union[str, int] = None):
         if ctx.author.is_mod:
-            stream = Stream.get_stream(ctx.channel.name)
+            stream = self.Stream.get_stream(ctx.channel.name)
             if option == "list":
                 counter = 0
                 message = "Ban Queue:              "
@@ -81,11 +79,11 @@ class ModCommands(CustomCog):
 
     @commands.command(name="disable-cmd")
     async def disable_command(self, ctx: commands.Context, cmd: str):
-        stream = Stream.get_stream(ctx.channel.name)
+        stream = self.Stream.get_stream(ctx.channel.name)
         if ctx.author.is_mod and ctx.command.name not in stream.config['chat-bot'][
             'ignore-commands'] or ctx.author.is_broadcaster:
-            if cmd.startswith(self.bot._prefix):
-                cmd = cmd[len(self.bot._prefix):]
+            if cmd.startswith(self.bot.prefix):
+                cmd = cmd[len(self.bot.prefix):]
             command = self.bot.get_command(cmd)
             if command is not None:
                 if command.name not in stream.config['chat-bot']['ignore-commands']:
@@ -99,11 +97,11 @@ class ModCommands(CustomCog):
 
     @commands.command(name="enable-cmd")
     async def enable_command(self, ctx: commands.Context, cmd: str):
-        stream = Stream.get_stream(ctx.channel.name)
+        stream = self.Stream.get_stream(ctx.channel.name)
         if ctx.author.is_mod and ctx.command.name not in stream.config['chat-bot'][
             'ignore-commands'] or ctx.author.is_broadcaster:
-            if cmd.startswith(self.bot._prefix):
-                cmd = cmd[len(self.bot._prefix):]
+            if cmd.startswith(self.bot.prefix):
+                cmd = cmd[len(self.bot.prefix):]
             command = self.bot.get_command(cmd)
             if command is not None:
                 if command.name in stream.config['chat-bot']['ignore-commands']:
@@ -117,7 +115,7 @@ class ModCommands(CustomCog):
 
     @commands.command(name="set-title")
     async def set_title(self, ctx: commands.Context, title: str):
-        stream = Stream.get_stream(ctx.channel.name)
+        stream = self.Stream.get_stream(ctx.channel.name)
         if ctx.author.is_mod and ctx.command.name not in stream.config['chat-bot']['ignore-commands'] or ctx.author.is_broadcaster:
             if TwitchUserAPI.get_twitch_api(ctx.channel.name).set_title(stream, title):
                 await ctx.send(f"title set to \"{title}\" by {ctx.author.name}")
@@ -126,7 +124,7 @@ class ModCommands(CustomCog):
 
     @commands.command(name="set-game")
     async def set_game(self, ctx: commands.Context, game: str):
-        stream = Stream.get_stream(ctx.channel.name)
+        stream = self.Stream.get_stream(ctx.channel.name)
         if ctx.author.is_mod and ctx.command.name not in stream.config['chat-bot']['ignore-commands'] or ctx.author.is_broadcaster:
             if TwitchUserAPI.get_twitch_api(ctx.channel.name).set_game(stream, game):
                 await ctx.send(f"game set to \"{game}\" by {ctx.author.name}")
