@@ -5,7 +5,7 @@ from typing import List, TYPE_CHECKING
 
 from twitchAPI import Twitch, AuthScope, EventSub, EventSubSubscriptionError, PubSub, TwitchAuthorizationException, \
     TwitchBackendException, TwitchAPIException, PubSubListenTimeoutException, MissingScopeException, \
-    refresh_access_token, UserAuthenticator, InvalidRefreshTokenException
+    refresh_access_token, UserAuthenticator, InvalidRefreshTokenException, EventSubSubscriptionTimeout
 
 from data_types.stream import Stream
 from data_types.twitch_bot_config import TwitchBotConfig
@@ -126,7 +126,7 @@ class TwitchAPI:
         return self._twitch.get_users(logins=[name])['data'][0]['id']
 
     def setup_event_subs(self, callback_url: str, callback_port: int):
-        log.info("Setting up webhooks")
+        log.info("Setting up EventSub webhooks")
         self._event_sub_hook = EventSub(callback_url, self._client_id, callback_port, self._twitch)
         self._event_sub_hook.unsubscribe_all()
         self._event_sub_hook.start()
@@ -147,6 +147,8 @@ class TwitchAPI:
                     EventSubType.CHANNEL_FOLLOW)
             except EventSubSubscriptionError:
                 log.warning(f"Something went wrong here: No auth for {stream.streamer}.")
+            except EventSubSubscriptionTimeout:
+                log.error(f"EventSub timed out.")
             try:
                 stream.set_callback_id(
                     self._event_sub_hook.listen_channel_ban(stream.user_id, EventSubCallbacks.on_ban),
@@ -156,6 +158,8 @@ class TwitchAPI:
                     EventSubType.CHANNEL_UNBAN)
             except EventSubSubscriptionError:
                 log.warning(f"{stream.streamer} does not have the app authorized.")
+            except EventSubSubscriptionTimeout:
+                log.error(f"EventSub timed out.")
 
     def setup_pubsub(self, user_id: str):
         log.info("Setting up PubSub")
