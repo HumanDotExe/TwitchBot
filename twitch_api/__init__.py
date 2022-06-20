@@ -49,7 +49,7 @@ class TwitchAPI:
                  base_path: Path, user_auth_scope: List[AuthScope] = None, app_auth_scope: List[AuthScope] = None):
         log.debug("Twitch API Object created")
         if user_auth_scope is None:
-            user_auth_scope = [AuthScope.CHANNEL_MODERATE]
+            user_auth_scope = [AuthScope.CHANNEL_MODERATE, AuthScope.MODERATOR_MANAGE_BANNED_USERS]
         if app_auth_scope is None:
             app_auth_scope = [AuthScope.CHANNEL_MODERATE]
         self._client_id = client_id
@@ -63,6 +63,7 @@ class TwitchAPI:
         self._token = None
         self._event_sub_hook = None
         self._pubsub = None
+        self._bot_id = None
         self.authenticate()
         self.collect_stream_info()
 
@@ -115,6 +116,23 @@ class TwitchAPI:
                 Stream.add_stream(stream)
                 if stream.config["chat-bot"]["enable-channel-edit-commands"]:
                     stream.set_twitch_user_api(TwitchUserAPI(self._client_id, self._client_secret, stream.streamer))
+
+        bot_info = self._twitch.get_users(logins=[TwitchBotConfig.get_config()['BOT']['NICK']])
+        self._bot_id = bot_info['data'][0]['id']
+
+    def ban_user(self, channel_id: str, user_id: str, reason: str, duration: int = None) -> bool:
+        try:
+            self._twitch.ban_user(channel_id, self._bot_id, user_id, reason, duration)
+        except TwitchAPIException:
+            return False
+        return True
+
+    def unban_user(self, channel_id: str, user_id: str) -> bool:
+        try:
+            self._twitch.unban_user(channel_id, self._bot_id, user_id)
+        except TwitchAPIException:
+            return False
+        return True
 
     def get_global_chat_emotes(self):
         log.info("Retrieving chat emotes")
