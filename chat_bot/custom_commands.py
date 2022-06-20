@@ -42,12 +42,16 @@ class CustomCommands(CustomCog):
                 self.add_command(commands.Command(command, self.display_command))
 
     @classmethod
-    async def display_command(cls, ctx: commands.Context):
+    async def display_command(cls, ctx: commands.Context, *args):
         stream = cls.Stream.get_stream(ctx.channel.name)
         command = stream.get_command(ctx.command.name)
         if command and ctx.command.name not in stream.config['chat-bot']['ignore-commands']:
             if CustomCommands.has_user_right(ctx, command):
-                await ctx.send(command.get_message())
+                try:
+                    message = command.get_message().format(**cls.get_format_dicts(command, ctx, stream, *args))
+                    await ctx.send(message)
+                except KeyError as e:
+                    log.warning(f"Key {e} was not defined in {command.name}.cmd file. Please correct.")
 
 
 def prepare(bot: ChatBot):

@@ -31,7 +31,11 @@ class BaseCommands(CustomCog):
                     message = command.get_message("online")
                 else:
                     message = command.get_message("offline")
-                await ctx.send(message.format(**self.get_format_dicts(command, ctx, stream, *args)))
+                try:
+                    message = message.format(**self.get_format_dicts(command, ctx, stream, *args))
+                    await ctx.send(message)
+                except KeyError as e:
+                    log.warning(f"Key {e} was not defined in {command.name}.cmd file. Please correct.")
 
     @commands.command(name="game")
     async def game(self, ctx: commands.Context, *args):
@@ -43,7 +47,11 @@ class BaseCommands(CustomCog):
                     message = command.get_message("online")
                 else:
                     message = command.get_message("offline")
-                await ctx.send(message.format(**self.get_format_dicts(command, ctx, stream, *args)))
+                try:
+                    message = message.format(**self.get_format_dicts(command, ctx, stream, *args))
+                    await ctx.send(message)
+                except KeyError as e:
+                    log.warning(f"Key {e} was not defined in {command.name}.cmd file. Please correct.")
 
     @commands.command(name="title")
     async def title(self, ctx: commands.Context, *args):
@@ -55,7 +63,11 @@ class BaseCommands(CustomCog):
                     message = command.get_message("online")
                 else:
                     message = command.get_message("offline")
-                await ctx.send(message.format(**self.get_format_dicts(command, ctx, stream, *args)))
+                try:
+                    message = message.format(**self.get_format_dicts(command, ctx, stream, *args))
+                    await ctx.send(message)
+                except KeyError as e:
+                    log.warning(f"Key {e} was not defined in {command.name}.cmd file. Please correct.")
 
     @commands.command(name="lurk")
     async def lurk(self, ctx: commands.Context, *args):
@@ -83,7 +95,11 @@ class BaseCommands(CustomCog):
                     message = command.get_message("online")
                 else:
                     message = command.get_message("offline")
-                await ctx.send(message.format(**self.get_format_dicts(command, ctx, stream, *args)))
+                try:
+                    message = message.format(**self.get_format_dicts(command, ctx, stream, *args))
+                    await ctx.send(message)
+                except KeyError as e:
+                    log.warning(f"Key {e} was not defined in {command.name}.cmd file. Please correct.")
 
 
 def prepare(bot: ChatBot):
