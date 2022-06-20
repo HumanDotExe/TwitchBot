@@ -218,6 +218,14 @@ class Stream:
     def set_beatsaber_websocket(self, websocket: WebSocketResponse):
         self._beatsaber_websocket = websocket
 
+    def get_command(self, command_name: str) -> Command | None:
+        if command_name in self.commands:
+            return self.commands[command_name]
+        return None
+
+    def get_custom_commands(self) -> List[str]:
+        return [x for x in self.commands.keys() if self.commands[x].is_custom_command]
+
     @property
     def beatsaber_websocket(self) -> WebSocketResponse | None:
         return self._beatsaber_websocket

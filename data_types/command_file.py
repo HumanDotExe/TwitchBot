@@ -19,6 +19,23 @@ class PerStreamConfigError(Exception):
     pass
 
 
+def create_random_dict():
+    random_dict = {}
+    for i in range(0, 100):
+        random_dict[Optional("random"+str(i))] = And(list)
+    return random_dict
+
+
+def create_param_dict():
+    param_dict = {}
+    for i in range(0, 100):
+        param_dict[Optional("param"+str(i))] = {
+                Optional('isRequired', default=False): And(bool),
+                Optional('useCallerNameIfEmpty', default=False): And(bool)
+        }
+    return param_dict
+
+
 class CommandConfig:
     __schema = Schema(
         {
@@ -37,13 +54,8 @@ class CommandConfig:
             },
             Optional('help', default=None): Or(str, None),
             Optional('parameter-count', default=0): And(int),
-            Optional('param' + str(range(0, 100))): {
-                Optional('isRequired', default=False): And(bool),
-                Optional('useCallerNameIfEmpty', default=False): And(bool)
-            },
-            Optional('random'): {
-                Optional('random' + str(range(0, 100))): And(list)
-            }
+            Optional("params"): create_param_dict(),
+            Optional('random'): create_random_dict()
         }
     )
 

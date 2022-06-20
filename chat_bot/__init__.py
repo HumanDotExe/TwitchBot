@@ -42,6 +42,10 @@ class ChatBot(commands.Bot):
             prefix=self._prefix,
             initial_channels=self._channels
         )
+
+        from chat_bot.custom_cog import CustomCog
+        CustomCog.load_global_commands()
+
         self.load_module_by_type(ChatBotModuleType.BASE)
         self.load_module_by_type(ChatBotModuleType.MOD)
         self.load_module_by_type(ChatBotModuleType.CUSTOM)

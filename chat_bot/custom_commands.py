@@ -31,11 +31,11 @@ class CustomCommands(CustomCog):
         display_commands = []
         if stream:
             log.debug(f"CustomCommands for {stream.streamer}")
-            display_commands = stream.commands.keys()
+            display_commands = stream.get_custom_commands()
         else:
             log.debug("CustomCommands for all streams loaded")
             for stream in self.Stream.get_streams():
-                display_commands.extend(stream.commands.keys())
+                display_commands.extend(stream.get_custom_commands())
 
         for command in display_commands:
             if command not in self.bot.commands.keys() and command not in self.commands:
@@ -44,10 +44,10 @@ class CustomCommands(CustomCog):
     @classmethod
     async def display_command(cls, ctx: commands.Context):
         stream = cls.Stream.get_stream(ctx.channel.name)
-        if ctx.command.name in stream.commands.keys() and ctx.command.name not in stream.config['chat-bot'][
-            'ignore-commands']:
-            if CustomCommands.has_user_right(ctx, stream.commands[ctx.command.name]):
-                await ctx.send(stream.commands[ctx.command.name].get_message())
+        command = stream.get_command(ctx.command.name)
+        if command and ctx.command.name not in stream.config['chat-bot']['ignore-commands']:
+            if CustomCommands.has_user_right(ctx, command):
+                await ctx.send(command.get_message())
 
 
 def prepare(bot: ChatBot):

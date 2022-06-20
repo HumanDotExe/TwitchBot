@@ -47,6 +47,20 @@ class Command:
         else:
             return message_list[0]
 
+    def is_param_required(self, param: str) -> bool:
+        if "params" in self.__command_config and param in self.__command_config["params"]:
+            return self.__command_config["params"][param]["isRequired"]
+        return False
+
+    def replace_param_with_caller(self, param: str) -> bool:
+        if "params" in self.__command_config and param in self.__command_config["params"]:
+            return self.__command_config["params"][param]["useCallerNameIfEmpty"]
+        return False
+
+    def get_random(self):
+        if "random" in self.__command_config:
+            return self.__command_config["random"]
+
     @property
     def name(self) -> str:
         return self.__command_config["name"]
@@ -66,3 +80,7 @@ class Command:
     @property
     def is_custom_command(self) -> bool:
         return self.__is_custom
+
+    @property
+    def parameter_count(self) -> int:
+        return self.__command_config["parameter-count"]
