@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from data_types.types_collection import EventSubType, PubSubType
     from aiohttp.web_ws import WebSocketResponse
     from twitch_api.twitch_user_api import TwitchUserAPI
+    from data_types.command import Command
 
 log = logging.getLogger(__name__)
 
@@ -192,7 +193,7 @@ class Stream:
         """Completely removes the chat message from the list as if it was never there"""
         self.__chat_messages.remove(message)
 
-    def find_chat_message(self, message: str, user: str) -> Union[ChatMessage, None]:
+    def find_chat_message(self, message: str, user: str) -> ChatMessage | None:
         """Finds the ChatMessage instance"""
         for chat_message in self.__chat_messages:
             if chat_message.user == user and chat_message.message == message:
@@ -218,7 +219,7 @@ class Stream:
         self._beatsaber_websocket = websocket
 
     @property
-    def beatsaber_websocket(self) -> Union[WebSocketResponse, None]:
+    def beatsaber_websocket(self) -> WebSocketResponse | None:
         return self._beatsaber_websocket
 
     @property
