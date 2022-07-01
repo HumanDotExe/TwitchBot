@@ -1,18 +1,6 @@
 from enum import Enum
 
 
-class ChatMessageType(Enum):
-    NORMAL = "normal"
-    FIRST_TIME = "first_time"
-    ANNOUNCEMENT = "announcement"
-    COMMAND = "command"
-
-
-class NotificationType(Enum):
-    SUB = "subscription"
-    FOLLOW = "follow"
-
-
 class EventSubType(Enum):
     CHANNEL_UPDATE = 1
     CHANNEL_FOLLOW = 2

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from data_types.types_collection import ChatMessageType
+from datetime import datetime
+
+from data_types.stream_overlay.types import ChatMessageType
 
 
 class ChatMessage:
@@ -24,28 +26,20 @@ class ChatMessage:
                     versions[version['id']] = {k: version[k] for k in set(list(version.keys())) - {"id"}}
                 cls.__global_badges[badge['set_id']] = versions
 
-    def __init__(self, message: str, time: int, refresh_time: int, tags: dict):
+    def __init__(self, message: str, timestamp: datetime, tags: dict):
         self.__user = tags['display-name']
+        self.__sent_at = timestamp
         self.__user_with_badges = self.format_user(tags)
-        if tags['first-msg'] == '1':
+        if 'first-msg' in tags and tags['first-msg'] == '1':
             self.__type = ChatMessageType.FIRST_TIME
         else:
             self.__type = ChatMessageType.NORMAL
         self.__is_deleted = False
         self.__message = self.format_message(message)
         self.__message_with_emotes = self.replace_twitch_emotes(self.__message, tags)
-        self.__time = time
-        self.__refresh_time = refresh_time
 
     def __eq__(self, other):
-        return isinstance(other, ChatMessage) and self.__user == other.__user and self.__message == other.__message
-
-    @property
-    def time_left(self):
-        return self.__time
-
-    def decrease_time_left(self):
-        self.__time -= self.__refresh_time
+        return isinstance(other, ChatMessage) and self.__user == other.__user and self.__message == other.__message and self.__sent_at == other.__sent_at
 
     @property
     def chat_message(self):
@@ -64,6 +58,10 @@ class ChatMessage:
     @property
     def message(self):
         return self.__message
+
+    @property
+    def sent_at(self):
+        return self.__sent_at
 
     def format_message(self, message: str):
         if 'ACTION' in message:

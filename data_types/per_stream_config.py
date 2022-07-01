@@ -34,6 +34,7 @@ class PerStreamConfig:
                     Optional('refresh-token', default=None): Or(str, None)
                 },
             'stream-overlays': {
+                'enabled': And(bool),
                 'notifications': {
                     'cooldown': And(int),
                     Optional('block', default=[]): And(list),
@@ -69,6 +70,7 @@ class PerStreamConfig:
       ignore-commands: []
     
     stream-overlays:
+      enabled: False
       notifications:
         cooldown: 3
         block: []

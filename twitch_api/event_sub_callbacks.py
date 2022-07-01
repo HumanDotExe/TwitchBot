@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 
 from data_types.stream import Stream
-from data_types.types_collection import NotificationType
+from data_types.stream_overlay.types import NotificationType
 
 log = logging.getLogger(__name__)
 

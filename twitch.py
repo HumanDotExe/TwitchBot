@@ -9,7 +9,9 @@ from typing import TYPE_CHECKING
 
 from beatsaber_request_websocket import BeatSaberIntegration
 from chat_bot import ChatBot
-from data_types.chat_message import ChatMessage
+from data_types.stream_overlay.chat_message import ChatMessage
+
+from data_types.stream import Stream
 from data_types.types_collection import ChatBotModuleType
 from data_types.twitch_bot_config import TwitchBotConfig
 from twitch_api import TwitchAPI
@@ -56,6 +58,8 @@ def startup():
 
     if not beatsaber_exclusive:
         log.info("Setup Webserver")
+        for stream in Stream.get_streams():
+            stream.initiate_chat_queue(test_callback)
         Webserver.set_webserver(Webserver())
         asyncio.ensure_future(Webserver.get_webserver().start_webserver(config['WEBSERVER']['BIND_IP'], config['WEBSERVER'].getint('BIND_PORT')))
 
@@ -80,9 +84,15 @@ def exit_handler(signal_number: int, _: FrameType):
         log.debug("Trying to stop ChatBot")
         asyncio.ensure_future(ChatBot.get_bot().stop_chat_bot())
     if TwitchAPI.get_twitch_api():
+        log.debug("Trying to stop TwitchAPI")
         TwitchAPI.get_twitch_api().stop_twitch_api()
     if BeatSaberIntegration.get_beatsaber():
+        log.debug("Trying to stop BeatSaberIntegration")
         asyncio.ensure_future(BeatSaberIntegration.get_beatsaber().stop_beatsaber_integration())
+
+
+def test_callback(action, message):
+    log.debug(f"chat callback called with action {action} and message {message}")
 
 
 if __name__ == "__main__":

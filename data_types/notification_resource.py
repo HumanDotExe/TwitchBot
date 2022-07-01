@@ -5,7 +5,7 @@ import logging
 import mimetypes
 from typing import TYPE_CHECKING
 
-from data_types.types_collection import NotificationType
+from data_types.stream_overlay.types import NotificationType
 
 if TYPE_CHECKING:
     from pathlib import Path

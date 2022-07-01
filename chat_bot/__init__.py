@@ -92,7 +92,7 @@ class ChatBot(commands.Bot):
                 await channel.send(stream.config['chat-bot']['online-message'].format(bot_name=self.display_nick))
         log.info(f'{self.display_nick} online!')
 
-    async def create_bot_tag_for_channel(self, channel: Channel):
+    async def create_bot_tag_for_channel(self, channel: Channel, bot_color: str):
         chatter = channel.get_chatter(self.display_nick)
         if chatter is not None:
             badges = ""
@@ -101,26 +101,30 @@ class ChatBot(commands.Bot):
                     badges += f"{key}/{value}"
                 else:
                     badges += f",{key}/{value}"
-            self._bot_tags[channel.name] = {'badges': badges, 'display-name': chatter.display_name, 'emotes': ''}
+            self._bot_tags[channel.name] = {'badges': badges, 'display-name': chatter.display_name, 'emotes': '', 'color': bot_color}
 
-    async def get_bot_tags_for_channel(self, channel: Channel) -> dict:
+    async def get_bot_tags_for_stream(self, stream: Stream) -> dict:
+        channel = self.__bot.get_channel(stream.streamer.lower())
         if channel.name not in self._bot_tags:
-            await self.create_bot_tag_for_channel(channel)
+            await self.create_bot_tag_for_channel(channel, stream.config['chat-bot']['bot-color'])
         return self._bot_tags[channel.name]
 
     async def event_message(self, message: Message):
         stream = self.Stream.get_stream(message.channel.name)
         if message.echo:
-            stream.add_chat_message(message.content, await self.get_bot_tags_for_channel(message.channel), True)
+            if stream.chat_queue:
+                tags = await self.get_bot_tags_for_stream(stream)
+                stream.chat_queue.add_message(message.content, message.timestamp, tags, True)
             stream.write_into_chatlog(self.display_nick, message.content)
             log.debug(f"{message.channel.name} -> {self.display_nick}: {message.content}")
             return
         stream.write_into_chatlog(message.author.display_name, message.content)
         if message.content[0] == self._prefix:
-            if stream.config['stream-overlays']['chat']['include-commands']:
-                stream.add_chat_message(message.content, message.tags)
+            if stream.chat_queue and stream.config['stream-overlays']['chat']['include-commands']:
+                stream.chat_queue.add_message(message.content, message.timestamp, message.tags)
         else:
-            stream.add_chat_message(message.content, message.tags)
+            if stream.chat_queue:
+                stream.chat_queue.add_message(message.content, message.timestamp, message.tags)
         log.debug(f"{message.channel.name} -> {message.author.display_name}: {message.content}")
         await self.handle_commands(message)
 

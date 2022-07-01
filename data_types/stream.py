@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import datetime
 import logging
-from typing import Union, List, TYPE_CHECKING, Optional
+from typing import Union, List, TYPE_CHECKING, Optional, Callable
 
-from data_types.chat_message import ChatMessage
+from data_types.stream_overlay.chat_message import ChatMessage
 from data_types.notification_resource import NotificationResource
 from data_types.per_stream_config import PerStreamConfig
-from data_types.types_collection import NotificationType, ValidationException
+from data_types.types_collection import ValidationException
+from data_types.stream_overlay.types import NotificationType
+from data_types.stream_overlay.chat_queue import ChatQueue
 
 if TYPE_CHECKING:
     from uuid import UUID
@@ -16,6 +18,7 @@ if TYPE_CHECKING:
     from aiohttp.web_ws import WebSocketResponse
     from twitch_api.twitch_user_api import TwitchUserAPI
     from data_types.command import Command
+    from data_types.stream_overlay.types import ActionType
 
 log = logging.getLogger(__name__)
 
@@ -59,7 +62,7 @@ class Stream:
         self.__notifications = {}
         self.commands = {}
 
-        self.__chat_messages = []
+        self.chat_queue: ChatQueue | None = None
 
         self.__stream_start = None
         self.__current_cooldown = 0
@@ -95,6 +98,9 @@ class Stream:
                 self.paths["chatlog"] = self.paths["stream"] / "logs"
                 self.paths["chatlog"].mkdir(parents=True, exist_ok=True)
             self.__setup_custom_commands()
+
+        if self.config['stream-overlays']['enabled'] and self.chat_queue:
+            self.chat_queue.update_queue_settings(self.config['stream-overlays']['chat']['include-command-output'])
 
     def save_settings(self):
         log.info(f"Saving Stream settings for {self.streamer}")
@@ -180,40 +186,9 @@ class Stream:
                 time = datetime.datetime.now().time().isoformat()
                 f.write(f"{time}:{user}: {message}\n")
 
-    def add_chat_message(self, message: str, tags: dict, is_bot_message: bool = False):
-        if is_bot_message:
-            if self.config['stream-overlays']['chat']['include-command-output']:
-                tags['color'] = self.config['chat-bot']['bot-color']
-            else:
-                return
-        self.__chat_messages.append(ChatMessage(message, self.config['stream-overlays']['chat']['message-stays-for'],
-                                                self.config['stream-overlays']['chat']['message-refresh-rate'], tags))
-
-    def remove_chat_message(self, message: ChatMessage):
-        """Completely removes the chat message from the list as if it was never there"""
-        self.__chat_messages.remove(message)
-
-    def find_chat_message(self, message: str, user: str) -> ChatMessage | None:
-        """Finds the ChatMessage instance"""
-        for chat_message in self.__chat_messages:
-            if chat_message.user == user and chat_message.message == message:
-                return chat_message
-        return None
-
-    def delete_all_messages_by_user(self, user: str):
-        """delete all messages written by user. Intended to delete messages on ban"""
-        for chat_message in self.__chat_messages:
-            if chat_message.user == user:
-                chat_message.delete()
-
-    def delete_chat_message(self, message: str, user: str):
-        """Marks a chat message as deleted for display purposes. Intended to be called if a mod deletes a message"""
-        chat_message = self.find_chat_message(message, user)
-        if chat_message:
-            chat_message.delete()
-
-    def clear_chat(self):
-        self.__chat_messages = []
+    def initiate_chat_queue(self, callback: Callable[[ActionType, ChatMessage | None], None]):
+        if self.config['stream-overlays']['enabled'] and self.chat_queue is None:
+            self.chat_queue = ChatQueue(callback, self.config['stream-overlays']['chat']['include-command-output'])
 
     def set_beatsaber_websocket(self, websocket: WebSocketResponse):
         self._beatsaber_websocket = websocket
@@ -259,7 +234,3 @@ class Stream:
         if self.__is_streaming:
             return datetime.datetime.utcnow() - self.__stream_start
         return None
-
-    @property
-    def chat_messages(self):
-        return self.__chat_messages

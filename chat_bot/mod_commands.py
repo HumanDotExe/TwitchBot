@@ -7,7 +7,7 @@ from twitchio.ext import commands
 
 from chat_bot.custom_cog import CustomCog
 from chat_bot.custom_commands import CustomCommands
-from data_types.types_collection import NotificationType
+from data_types.stream_overlay.types import NotificationType
 
 if TYPE_CHECKING:
     from chat_bot import ChatBot

@@ -20,13 +20,13 @@ class PubSubCallbacks:
         action = data['data']['moderation_action']
         if action == ModerationActionType.CLEAR:
             stream = PubSubCallbacks.get_stream_for_action(uuid, PubSubType.CHAT_MODERATOR_ACTIONS)
-            if stream:
-                stream.clear_chat()
+            if stream and stream.chat_queue:
+                stream.chat_queue.clear()
         elif action == ModerationActionType.BAN:
             # only delete messages by banned user, multi-ban is handled by eventsub
             stream = PubSubCallbacks.get_stream_for_action(uuid, PubSubType.CHAT_MODERATOR_ACTIONS)
-            if stream:
-                stream.delete_all_messages_by_user(data['data']['target_user_login'])
+            if stream and stream.chat_queue:
+                stream.chat_queue.mark_user_as_deleted(data['data']['target_user_login'])
         elif action == ModerationActionType.UNBAN:
             # do nothing, multi-unban is handled by eventsub
             pass
