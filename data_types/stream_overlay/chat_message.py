@@ -41,6 +41,21 @@ class ChatMessage:
     def __eq__(self, other):
         return isinstance(other, ChatMessage) and self.__user == other.__user and self.__message == other.__message and self.__sent_at == other.__sent_at
 
+    def to_dict(self):
+        if isinstance(self, ChatMessage):
+            message_dict = {
+                "sent_at": str(self.__sent_at),
+                "is_deleted": self.__is_deleted,
+                "message": self.__message,
+                "type": self.__type.name,
+                "message_formatted": self.chat_message,
+                "user": self.__user
+            }
+            return message_dict
+        else:
+            type_name = self.__class__.__name__
+            raise TypeError("Unexpected type {0}".format(type_name))
+
     @property
     def chat_message(self):
         if self.__type == ChatMessageType.COMMAND:

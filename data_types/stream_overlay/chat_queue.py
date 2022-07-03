@@ -9,10 +9,11 @@ from data_types.stream_overlay.types import ActionType
 
 
 class ChatQueue:
-    def __init__(self, callback: Callable[[ActionType, ChatMessage | None], None], include_bot_messages: bool):
+    def __init__(self, callback: Callable[[ChatQueue, ActionType, ChatMessage | None], None], include_bot_messages: bool):
         self.__messages: List[ChatMessage] = []
         self.__callback = callback
         self.__include_bot_messages = include_bot_messages
+        self.websockets = []
 
     def update_queue_settings(self, include_bot_messages: bool):
         self.__include_bot_messages = include_bot_messages
@@ -46,21 +47,24 @@ class ChatQueue:
     def clear(self):
         """clears the chat queue"""
         self.__messages = []
-        self.__callback(ActionType.CLEAR, None)
+        self.__callback(self, ActionType.CLEAR, None)
 
     def get_messages(self, number: int = 0):
         return copy.deepcopy(self.__messages[-number:])
 
+    def get_messages_as_json(self, number: int = 0):
+        return [m.to_dict() for m in copy.deepcopy(self.__messages[-number:])]
+
     def __add_message(self, message: ChatMessage):
         self.__messages.append(message)
-        self.__callback(ActionType.ADD, message)
+        self.__callback(self, ActionType.ADD, message)
 
     def __remove_message(self, message: ChatMessage):
         self.__messages.remove(message)
-        self.__callback(ActionType.REMOVE, message)
+        self.__callback(self, ActionType.REMOVE, message)
 
     def __update_message(self, message: ChatMessage):
-        self.__callback(ActionType.UPDATE, message)
+        self.__callback(self, ActionType.UPDATE, message)
 
     def __find_message(self, message_content: str, user: str, sent_at: datetime = None) -> ChatMessage | None:
         for message in self.__messages:
