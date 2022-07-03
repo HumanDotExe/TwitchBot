@@ -102,10 +102,11 @@ class ChatMessage:
                     current_emote = cls.__global_emotes[emote_parts[0]]
                     replace[current_emote['name']] = current_emote['images']['url_1x']
                 else:
-                    from_str, to_str = emote_parts[1].split("-")
-                    name = message[int(from_str):int(to_str) + 1]
-                    url = f"https://static-cdn.jtvnw.net/emoticons/v2/{emote_parts[0]}/default/light/1.0"
-                    replace[name] = url
+                    for part in emote_parts[1].split(","):
+                        from_str, to_str = part.split("-")
+                        name = message[int(from_str):int(to_str) + 1]
+                        url = f"https://static-cdn.jtvnw.net/emoticons/v2/{emote_parts[0]}/default/light/1.0"
+                        replace[name] = url
 
             for name, url in replace.items():
                 message = message.replace(name, f"<img src='{url}'>")
