@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 import logging
 from typing import TYPE_CHECKING
 
@@ -70,24 +71,19 @@ async def display_chat_messages(request: Request):
         stream = Stream.get_stream(request.rel_url.query.get('stream', ''))
         content = "<div id='chat' width=500px style='{word-break: break-word;}'>"
 
-        # TODO: finish this, this does not look finished
-        message_number = stream.config['stream-overlays']['chat']['max-number-of-messages']
         try:
             message_number = int(request.rel_url.query.get('count', 'blah'))
         except ValueError:
             message_number = stream.config['stream-overlays']['chat']['max-number-of-messages']
 
-        if message_number > 0:
-            messages = stream.chat_messages[-message_number:]
-        else:
-            messages = stream.chat_messages
-
-        for message in messages:
-            if message.time_left > 0:
+        for message in stream.chat_queue.get_messages(message_number):
+            now = datetime.datetime.utcnow()
+            difference = int((now - message.sent_at).total_seconds())
+            log.debug(f"{difference} <= {stream.config['stream-overlays']['chat']['message-stays-for']}")
+            if difference <= stream.config['stream-overlays']['chat']['message-stays-for']:
                 content += f"<p id='chat_message'>{message.chat_message}</p>"
-                message.decrease_time_left()
             else:
-                stream.remove_chat_message(message)
+                stream.chat_queue.remove_message(message.message, message.user, message.sent_at)
         content += "</div>"
         return web.Response(
             text=default_html.format(refresh=stream.config['stream-overlays']['chat']['message-refresh-rate'],
