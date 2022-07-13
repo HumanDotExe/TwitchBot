@@ -2,7 +2,7 @@
 
 ## Commands
 - [ ] make hardcoded command text configurable
-- [ ] design a better command structure that includes help text
+- [X] design a better command structure that includes help text
 - [ ] finish help command
 - [ ] more mod commands (change game, title and stuff)
 - [ ] beatsaber commands (needs a compatible beatsaber mod first that can receive commands via some endpoint (rest maybe))
