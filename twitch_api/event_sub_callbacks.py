@@ -37,7 +37,7 @@ class EventSubCallbacks:
         if data['event']['is_permanent']:
             ban_user = data['event']['user_login']
             reason = f"banned in channel {stream.streamer}"
-            if data['event']['reason'] is not "":
+            if data['event']['reason'] != "":
                 reason = f"{reason}: {data['event']['reason']}"
             for s in Stream.get_streams():
                 if stream.streamer != s.streamer and s.config['sync-bans']:
