@@ -32,7 +32,7 @@ signal_to_name = dict((k, v) for v, k in reversed(sorted(signal.__dict__.items()
 
 def startup():
     log.info("Reading config")
-    config = TwitchBotConfig('secrets.ini')
+    config = TwitchBotConfig(pathlib.Path('secrets.ini'))
     TwitchBotConfig.set_config(config)
 
     beatsaber_exclusive = config.has_section('BEATSABER') and config['BEATSABER'].getboolean("EXCLUSIVE")
