@@ -67,6 +67,6 @@ class TwitchUserAPI:
     def set_game(self, stream: Stream, game: str) -> bool:
         log.info(f"Setting game {game} for {stream.streamer}")
         games = self._twitch.get_games(names=[game])
-        if len(games["data"]) is 1:
+        if len(games["data"]) == 1:
             return self._twitch.modify_channel_information(broadcaster_id=stream.user_id, game_id=games["data"][0]["id"])
         return False

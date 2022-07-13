@@ -40,7 +40,7 @@ class EventSubCallbacks:
             if data['event']['reason'] is not "":
                 reason = f"{reason}: {data['event']['reason']}"
             for s in Stream.get_streams():
-                if stream.streamer is not s.streamer and s.config['sync-bans']:
+                if stream.streamer != s.streamer and s.config['sync-bans']:
                     from twitch_api import TwitchAPI
                     if TwitchAPI.get_twitch_api().ban_user(stream.user_id, data['event']['user_id'], reason):
                         log.info(f"Banning {ban_user} in channel {s.streamer} for {reason}")
@@ -53,7 +53,7 @@ class EventSubCallbacks:
         stream = Stream.get_stream(data['event']['broadcaster_user_name'])
         unban_user = data['event']['user_login']
         for s in Stream.get_streams():
-            if stream.streamer is not s.streamer and s.config['sync-bans']:
+            if stream.streamer != s.streamer and s.config['sync-bans']:
                 from twitch_api import TwitchAPI
                 if TwitchAPI.get_twitch_api().unban_user(stream.user_id, data['event']['user_id']):
                     log.info(f"Unbanning {unban_user} in channel {s.streamer}")

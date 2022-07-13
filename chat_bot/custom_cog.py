@@ -29,7 +29,7 @@ class CustomCog(commands.Cog):
     def get_commands():
         names = []
         for module_type in ChatBotModuleType:
-            if module_type is ChatBotModuleType.CUSTOM or module_type is ChatBotModuleType.BEATSABER:
+            if module_type == ChatBotModuleType.CUSTOM or module_type == ChatBotModuleType.BEATSABER:
                 pass
             module = importlib.import_module(module_type.value)
             for x in module.__dict__:
