@@ -8,15 +8,15 @@ class ChatMessage:
     __global_badges = {}
 
     @classmethod
-    def set_global_emotes(cls, emotes: dict):
-        cls.__global_emotes = {}
+    def set_global_emotes(cls, emotes: dict) -> None:
+        cls.__global_emotes: dict = {}
         if 'data' in emotes:
             for emote in emotes['data']:
                 cls.__global_emotes[emote['id']] = {k: emote[k] for k in set(list(emote.keys())) - {"id"}}
 
     @classmethod
-    def set_global_badges(cls, badges: dict):
-        cls.__global_badges = {}
+    def set_global_badges(cls, badges: dict) -> None:
+        cls.__global_badges: dict = {}
         if 'data' in badges:
             for badge in badges['data']:
                 versions = {}
@@ -24,18 +24,18 @@ class ChatMessage:
                     versions[version['id']] = {k: version[k] for k in set(list(version.keys())) - {"id"}}
                 cls.__global_badges[badge['set_id']] = versions
 
-    def __init__(self, message: str, time: int, refresh_time: int, tags: dict):
-        self.__user = tags['display-name']
-        self.__user_with_badges = self.format_user(tags)
+    def __init__(self, message: str, time: int, refresh_time: int, tags: dict) -> None:
+        self.__user: str = tags['display-name']
+        self.__user_with_badges: str = self.format_user(tags)
         if tags['first-msg'] == '1':
-            self.__type = ChatMessageType.FIRST_TIME
+            self.__type: ChatMessageType = ChatMessageType.FIRST_TIME
         else:
-            self.__type = ChatMessageType.NORMAL
-        self.__is_deleted = False
-        self.__message = self.format_message(message)
-        self.__message_with_emotes = self.replace_twitch_emotes(self.__message, tags)
-        self.__time = time
-        self.__refresh_time = refresh_time
+            self.__type: ChatMessageType = ChatMessageType.NORMAL
+        self.__is_deleted: bool = False
+        self.__message: str = self.format_message(message)
+        self.__message_with_emotes: str = self.replace_twitch_emotes(self.__message, tags)
+        self.__time: int = time
+        self.__refresh_time: int = refresh_time
 
     def __eq__(self, other):
         return isinstance(other, ChatMessage) and self.__user == other.__user and self.__message == other.__message

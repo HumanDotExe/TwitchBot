@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from twitchAPI import AuthScope, Twitch, refresh_access_token, InvalidRefreshTokenException, UserAuthenticator, \
     MissingScopeException
@@ -23,16 +23,16 @@ class TwitchUserAPI:
             stream.config['chat-bot']['refresh-token'] = refresh_token
             stream.save_settings()
 
-    def __init__(self, client_id: str, client_secret: str, streamer: str, user_auth_scope: List[AuthScope] = None):
+    def __init__(self, client_id: str, client_secret: str, streamer: str, user_auth_scope: list[AuthScope] = None):
         log.debug("Twitch User API Object created")
         if user_auth_scope is None:
             user_auth_scope = [AuthScope.CHANNEL_MANAGE_BROADCAST]
-        self._client_id = client_id
-        self._client_secret = client_secret
-        self._streamer = streamer
-        self._user_auth_scope = user_auth_scope
-        self._twitch: Twitch = None
-        self._token = None
+        self._client_id: str = client_id
+        self._client_secret: str = client_secret
+        self._streamer: str = streamer
+        self._user_auth_scope: list[AuthScope] = user_auth_scope
+        self._twitch: Optional[Twitch] = None
+        self._token: Optional[str] = None
         self.authenticate()
 
     def authenticate(self):

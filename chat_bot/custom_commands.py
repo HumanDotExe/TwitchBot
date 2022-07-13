@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from twitchio.ext import commands
 
@@ -18,7 +18,7 @@ logging.getLogger("twitchio.client").disabled = True
 
 class CustomCommands(CustomCog):
 
-    def __init__(self, bot):
+    def __init__(self, bot: ChatBot):
         super().__init__(bot)
         self.load_custom_commands()
 
@@ -26,7 +26,7 @@ class CustomCommands(CustomCog):
     async def event_ready(self):
         log.info(f'Custom Commands loaded: {self.name}')
 
-    def load_custom_commands(self, stream: Stream = None):
+    def load_custom_commands(self, stream: Optional[Stream] = None):
         log.info("Loading custom Commands")
         display_commands = []
         if stream:

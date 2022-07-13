@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 debug = logging.getLogger("debug-logger")
 
 
-async def websocket_handler(request: Request):
+async def websocket_handler(request: Request) -> None:
     from data_types.stream import Stream
     stream = Stream.get_stream(request.rel_url.name)
     if stream:

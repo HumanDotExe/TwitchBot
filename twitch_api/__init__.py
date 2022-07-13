@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from twitchAPI import Twitch, AuthScope, EventSub, EventSubSubscriptionError, PubSub, TwitchAuthorizationException, \
     TwitchBackendException, TwitchAPIException, PubSubListenTimeoutException, MissingScopeException, \
@@ -27,7 +27,7 @@ log = logging.getLogger(__name__)
 
 
 class TwitchAPI:
-    __twitch_api = None
+    __twitch_api: Optional[TwitchAPI] = None
 
     @classmethod
     def set_twitch_api(cls, twitch_api: TwitchAPI):
@@ -38,36 +38,35 @@ class TwitchAPI:
         return cls.__twitch_api
 
     @staticmethod
-    def user_refresh(_: str, refresh_token: str):
+    def user_refresh(_: str, refresh_token: str) -> None:
         log.debug("User token refreshed")
-        if TwitchBotConfig.get_config() is not None and refresh_token != TwitchBotConfig.get_config()['USER'][
-            'REFRESH_TOKEN']:
+        if TwitchBotConfig.get_config() is not None and refresh_token != TwitchBotConfig.get_config()['USER']['REFRESH_TOKEN']:
             log.debug(f"New token: {refresh_token}")
             TwitchBotConfig.get_config()['USER']['REFRESH_TOKEN'] = refresh_token
 
-    def __init__(self, client_id: str, client_secret: str, refresh_token: str, monitored_streams: List[str],
-                 base_path: Path, user_auth_scope: List[AuthScope] = None, app_auth_scope: List[AuthScope] = None):
+    def __init__(self, client_id: str, client_secret: str, refresh_token: str, monitored_streams: list[str],
+                 base_path: Path, user_auth_scope: Optional[list[AuthScope]] = None, app_auth_scope: Optional[list[AuthScope]] = None) -> None:
         log.debug("Twitch API Object created")
         if user_auth_scope is None:
             user_auth_scope = [AuthScope.CHANNEL_MODERATE, AuthScope.MODERATOR_MANAGE_BANNED_USERS]
         if app_auth_scope is None:
             app_auth_scope = [AuthScope.CHANNEL_MODERATE]
-        self._client_id = client_id
-        self._client_secret = client_secret
-        self._monitored_streams = monitored_streams
-        self._refresh_token = refresh_token
-        self._app_auth_scope = app_auth_scope
-        self._user_auth_scope = user_auth_scope
-        self._base_path = base_path
-        self._twitch: Twitch = None
-        self._token = None
-        self._event_sub_hook = None
-        self._pubsub = None
-        self._bot_id = None
+        self._client_id: str = client_id
+        self._client_secret: str = client_secret
+        self._monitored_streams: list[str] = monitored_streams
+        self._refresh_token: str = refresh_token
+        self._app_auth_scope: list[AuthScope] = app_auth_scope
+        self._user_auth_scope: list[AuthScope] = user_auth_scope
+        self._base_path: Path = base_path
+        self._twitch: Optional[Twitch] = None
+        self._token: Optional[str] = None
+        self._event_sub_hook: Optional[EventSub] = None
+        self._pubsub: Optional[PubSub] = None
+        self._bot_id: Optional[str] = None
         self.authenticate()
         self.collect_stream_info()
 
-    def authenticate(self):
+    def authenticate(self) -> None:
         log.info("Authentication started")
         self._twitch = Twitch(self._client_id, self._client_secret)
         self._twitch.user_auth_refresh_callback = self.user_refresh
@@ -94,7 +93,7 @@ class TwitchAPI:
             self._twitch.set_user_authentication(self._token, self._user_auth_scope, self._refresh_token)
             TwitchAPI.user_refresh(self._token, self._refresh_token)
 
-    def collect_stream_info(self):
+    def collect_stream_info(self) -> None:
         log.info("Collecting User Info and Stream Data for monitored streams")
         from twitch_api.twitch_user_api import TwitchUserAPI
 
@@ -134,11 +133,11 @@ class TwitchAPI:
             return False
         return True
 
-    def get_global_chat_emotes(self):
+    def get_global_chat_emotes(self) -> dict:
         log.info("Retrieving chat emotes")
         return self._twitch.get_global_emotes()
 
-    def get_global_chat_badges(self):
+    def get_global_chat_badges(self) -> dict:
         log.info("Retrieving Badges")
         return self._twitch.get_global_chat_badges()
 
@@ -146,7 +145,7 @@ class TwitchAPI:
         log.info(f"Retrieving user id for {name}")
         return self._twitch.get_users(logins=[name])['data'][0]['id']
 
-    def setup_event_subs(self, callback_url: str, callback_port: int):
+    def setup_event_subs(self, callback_url: str, callback_port: int) -> None:
         log.info("Setting up EventSub webhooks")
         self._event_sub_hook = EventSub(callback_url, self._client_id, callback_port, self._twitch)
         self._event_sub_hook.unsubscribe_all()
@@ -182,7 +181,7 @@ class TwitchAPI:
             except EventSubSubscriptionTimeout:
                 log.error(f"EventSub timed out.")
 
-    def setup_pubsub(self, user_id: str):
+    def setup_pubsub(self, user_id: str) -> None:
         log.info("Setting up PubSub")
         if self._pubsub is None:
             self._pubsub = PubSub(self._twitch)
@@ -190,9 +189,7 @@ class TwitchAPI:
         self._pubsub.start()
         for stream in Stream.get_streams():
             try:
-                stream.set_pubsub_uuid(self._pubsub.listen_chat_moderator_actions(user_id, stream.user_id,
-                                                                                  PubSubCallbacks.on_chat_moderator_action),
-                                       PubSubType.CHAT_MODERATOR_ACTIONS)
+                stream.set_pubsub_uuid(self._pubsub.listen_chat_moderator_actions(user_id, stream.user_id, PubSubCallbacks.on_chat_moderator_action), PubSubType.CHAT_MODERATOR_ACTIONS)
             except MissingScopeException:
                 log.error(f"{stream.streamer} is missing user authentication")
             except TwitchAuthorizationException:
@@ -204,7 +201,7 @@ class TwitchAPI:
             except TwitchAPIException:
                 log.error(f"Unexpected response")
 
-    def stop_twitch_api(self):
+    def stop_twitch_api(self) -> None:
         log.info("Stopping Twitch API")
         if self._event_sub_hook:
             self._event_sub_hook.stop()

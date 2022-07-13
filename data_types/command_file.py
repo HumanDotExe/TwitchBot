@@ -19,14 +19,14 @@ class PerStreamConfigError(Exception):
     pass
 
 
-def create_random_dict():
+def create_random_dict() -> dict:
     random_dict = {}
     for i in range(0, 100):
         random_dict[Optional("random"+str(i))] = And(list)
     return random_dict
 
 
-def create_param_dict():
+def create_param_dict() -> dict:
     param_dict = {}
     for i in range(0, 100):
         param_dict[Optional("param"+str(i))] = {
@@ -37,7 +37,7 @@ def create_param_dict():
 
 
 class CommandConfig:
-    __schema = Schema(
+    __schema: Schema = Schema(
         {
             'name': And(str),
             Optional('rights', default={'user': True}): {
@@ -60,14 +60,14 @@ class CommandConfig:
     )
 
     @classmethod
-    def load_command_file(cls, command_file: Path):
+    def load_command_file(cls, command_file: Path) -> dict:
         log.info(f"Reading Command File {command_file.name}")
         with open(command_file, 'r') as file:
             command_config = yaml.safe_load(file)
         return cls.validate(command_config)
 
     @classmethod
-    def validate(cls, command_config: dict):
+    def validate(cls, command_config: dict) -> dict:
         try:
             validated = cls.__schema.validate(command_config)
         except SchemaError as e:
@@ -78,7 +78,7 @@ class CommandConfig:
         return validated
 
     @classmethod
-    def save_command_file(cls, command_file: Path, command: dict):
+    def save_command_file(cls, command_file: Path, command: dict) -> None:
         log.info(f"Saving Command {command_file.name}")
 
         cleaned = clean_empty(command)

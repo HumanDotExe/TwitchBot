@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 from aiohttp import web
 import logging
 
@@ -16,28 +18,28 @@ class BeatSaberIntegration:
     __beatsaber = None
 
     @classmethod
-    def set_beatsaber(cls, beatsaber: BeatSaberIntegration):
-        cls.__beatsaber = beatsaber
+    def set_beatsaber(cls, beatsaber: BeatSaberIntegration) -> None:
+        cls.__beatsaber: BeatSaberIntegration = beatsaber
 
     @classmethod
     def get_beatsaber(cls) -> BeatSaberIntegration:
         return cls.__beatsaber
 
-    def __init__(self, path: str = "/beatsaber"):
+    def __init__(self, path: str = "/beatsaber") -> None:
         from data_types.stream import Stream
         log.debug("Beat Saber integration object created")
 
-        self._path = path
+        self._path: str = path
 
-        self._app = web.Application()
+        self._app: web.Application = web.Application()
 
         for channel in Stream.get_channels():
             self._app.add_routes([web.get(path + "/" + channel.lower(), websocket_handler)])
 
-        self._runner = web.AppRunner(self._app)
-        self._site = None
+        self._runner: web.AppRunner = web.AppRunner(self._app)
+        self._site: Optional[web.TCPSite] = None
 
-    async def start_beatsaber_integration(self, host: str, port: int):
+    async def start_beatsaber_integration(self, host: str, port: int) -> None:
         log.info("Starting Beat Saber Integration")
         await self._runner.setup()
         log.debug("Runner started")
@@ -45,7 +47,7 @@ class BeatSaberIntegration:
         await self._site.start()
         log.debug("Site started")
 
-    async def stop_beatsaber_integration(self):
+    async def stop_beatsaber_integration(self) -> None:
         from data_types.stream import Stream
         log.info("Stopping Beat Saber Integration")
         for stream in Stream.get_streams():

@@ -19,7 +19,7 @@ class PerStreamConfigError(Exception):
 
 
 class PerStreamConfig:
-    __schema = Schema(
+    __schema: Schema = Schema(
         {
             'sync-bans': And(bool),
             'chat-bot':
@@ -85,7 +85,7 @@ class PerStreamConfig:
     """
 
     @classmethod
-    def load_config(cls, config_file: Path):
+    def load_config(cls, config_file: Path) -> dict:
         log.info("Reading Config")
         with open(config_file, 'r') as file:
             config = yaml.safe_load(file)
@@ -103,7 +103,7 @@ class PerStreamConfig:
         return validated
 
     @classmethod
-    def save_config(cls, config_file: Path, config: dict):
+    def save_config(cls, config_file: Path, config: dict) -> None:
         log.info("Saving Config")
 
         cleaned = clean_empty(config)

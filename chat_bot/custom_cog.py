@@ -23,10 +23,10 @@ class CustomCog(commands.Cog):
     # this import is used by the subclasses of CustomCog
     from data_types.stream import Stream
 
-    global_commands = {}
+    global_commands: dict[str, Command] = {}
 
     @staticmethod
-    def get_commands():
+    def get_commands() -> list[str]:
         names = []
         for module_type in ChatBotModuleType:
             if module_type == ChatBotModuleType.CUSTOM or module_type == ChatBotModuleType.BEATSABER:
@@ -41,7 +41,7 @@ class CustomCog(commands.Cog):
         return names
 
     @classmethod
-    def load_global_commands(cls, suffix: str = ".cmd"):
+    def load_global_commands(cls, suffix: str = ".cmd") -> None:
         from data_types.command import Command
         path = pathlib.Path(__file__).resolve().parent / "commands"
         command_files = path.glob('**/*' + suffix)
@@ -61,14 +61,14 @@ class CustomCog(commands.Cog):
             return cls.global_commands[command_name]
         return command
 
-    def __init__(self, bot: chat_bot.ChatBot):
-        self.bot = bot
+    def __init__(self, bot: chat_bot.ChatBot) -> None:
+        self.bot: chat_bot.ChatBot = bot
 
-    def add_command(self, command: commands.Command):
+    def add_command(self, command: commands.Command) -> None:
         self.bot.add_command(command)
         self._commands[command.name] = command
 
-    def remove_command(self, command_name: str):
+    def remove_command(self, command_name: str) -> None:
         self.bot.remove_command(command_name)
         self._commands.pop(command_name)
 

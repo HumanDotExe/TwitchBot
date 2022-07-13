@@ -2,8 +2,12 @@ from __future__ import annotations
 
 import logging
 from configparser import ConfigParser
+from typing import TYPE_CHECKING, Optional
 
 log = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class TwitchBotConfigError(Exception):
@@ -11,38 +15,38 @@ class TwitchBotConfigError(Exception):
 
 
 class TwitchBotConfig(ConfigParser):
-    __config = None
+    __config: TwitchBotConfig = None
 
     @classmethod
-    def set_config(cls, config: TwitchBotConfig):
+    def set_config(cls, config: TwitchBotConfig) -> None:
         cls.__config = config
 
     @classmethod
-    def get_config(cls):
+    def get_config(cls) -> TwitchBotConfig:
         return cls.__config
 
-    def __init__(self, config_file):
+    def __init__(self, config_file: Path) -> None:
         log.debug("Config object created")
         super(TwitchBotConfig, self).__init__()
-        self.__config_file = config_file
+        self.__config_file: Path = config_file
         self.load_config()
 
-    def load_config(self):
+    def load_config(self) -> None:
         log.info("Reading Config")
         self.read(self.__config_file)
         self.validate_config()
 
-    def save_config(self):
+    def save_config(self) -> None:
         log.info("Saving Config")
         with open(self.__config_file, 'w') as configfile:
             self.write(configfile)
 
-    def set(self, section, option, value=None):
+    def set(self, section: str, option: str, value: Optional[str] = None):
         """Overwrite set to save config"""
         super().set(section, option, value)
         self.save_config()
 
-    def add_section(self, section):
+    def add_section(self, section: str):
         """Overwrite add_section to save config"""
         super().add_section(section)
         self.save_config()

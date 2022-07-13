@@ -20,13 +20,12 @@ class Command:
         log.info(f"Loading command {file_path.name}")
         if self.__builtin_commands is None:
             self.__builtin_commands = CustomCog.get_commands()
-        self.__file_path = file_path
+        self.__file_path: Path = file_path
 
-        command_config = CommandConfig.load_command_file(file_path)
-        self.__command_config = command_config
-        self.__is_custom = self.name not in self.__builtin_commands
+        self.__command_config: dict = CommandConfig.load_command_file(file_path)
+        self.__is_custom: bool = self.name not in self.__builtin_commands
 
-    def get_message(self, message_type: str = None) -> str:
+    def get_message(self, message_type: Optional[str] = None) -> str:
         if type(self.__command_config["output"]["message"]) is dict:
             if message_type in self.__command_config["output"]["message"]:
                 return self.__get_message(self.__command_config["output"]["message"][message_type])
@@ -57,7 +56,7 @@ class Command:
             return self.__command_config["params"][param]["useCallerNameIfEmpty"]
         return False
 
-    def get_random(self):
+    def get_random(self) -> str | dict:
         if "random" in self.__command_config:
             return self.__command_config["random"]
 
