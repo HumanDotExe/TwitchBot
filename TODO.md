@@ -4,7 +4,8 @@
 - [ ] make hardcoded command text configurable
 - [X] design a better command structure that includes help text
 - [ ] finish help command
-- [ ] more mod commands (change game, title and stuff)
+- [ ] rework alias logic for commands (it is only somewhat working)
+- [X] more mod commands (change game, title and stuff)
 - [ ] beatsaber commands (needs a compatible beatsaber mod first that can receive commands via some endpoint (rest maybe))
 
 # Overlays

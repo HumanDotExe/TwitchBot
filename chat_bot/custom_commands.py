@@ -29,29 +29,36 @@ class CustomCommands(CustomCog):
     def load_custom_commands(self, stream: Optional[Stream] = None):
         log.info("Loading custom Commands")
         display_commands = []
+        command_aliases = {}
+
         if stream:
             log.debug(f"CustomCommands for {stream.streamer}")
             display_commands = stream.get_custom_commands()
+            for command_name in display_commands:
+                command_aliases[command_name] = self._commands.get(command_name).aliases + stream.get_command(command_name).aliases
         else:
             log.debug("CustomCommands for all streams loaded")
             for stream in self.Stream.get_streams():
-                display_commands.extend(stream.get_custom_commands())
+                for command_name in stream.get_custom_commands():
+                    display_commands.append(command_name)
+                    if command_name in command_aliases:
+                        command_aliases[command_name].extend(stream.get_command(command_name).aliases)
+                    else:
+                        command_aliases[command_name] = stream.get_command(command_name).aliases
 
-        for command in display_commands:
-            if command not in self.bot.commands.keys() and command not in self.commands:
-                self.add_command(commands.Command(command, self.display_command))
+        for command_name in display_commands:
+            if command_name not in self.bot.commands.keys() and command_name not in self.commands:
+                bot_command = commands.Command(command_name, self.display_command, aliases=command_aliases[command_name])
+                self.add_command(bot_command)
 
     @classmethod
-    async def display_command(cls, ctx: commands.Context, *args):
-        stream = cls.Stream.get_stream(ctx.channel.name)
-        command = stream.get_command(ctx.command.name)
-        if command and ctx.command.name not in stream.config['chat-bot']['ignore-commands']:
-            if CustomCommands.has_user_right(ctx, command):
-                try:
-                    message = command.get_message().format(**cls.get_format_dicts(command, ctx, stream, *args))
-                    await ctx.send(message)
-                except KeyError as e:
-                    log.warning(f"Key {e} was not defined in {command.name}.cmd file. Please correct.")
+    async def display_command(cls, ctx: commands.Context, *_, **__):
+        command = ctx.kwargs["command"]
+        try:
+            message = command.get_message().format(**cls.get_format_dicts(ctx))
+            await ctx.send(message)
+        except KeyError as e:
+            log.warning(f"Key {e} was not defined in {command.name}.cmd file. Please correct.")
 
 
 def prepare(bot: ChatBot):

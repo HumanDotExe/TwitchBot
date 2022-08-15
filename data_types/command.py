@@ -83,3 +83,13 @@ class Command:
     @property
     def parameter_count(self) -> int:
         return self.__command_config["parameter-count"]
+
+    @property
+    def aliases(self) -> list[str]:
+        if type(self.__command_config["aliases"]) is str:
+            return [self.__command_config["aliases"]]
+        return self.__command_config["aliases"]
+
+    @property
+    def names(self) -> list[str]:
+        return self.aliases + [self.name]

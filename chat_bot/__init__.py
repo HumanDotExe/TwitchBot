@@ -4,6 +4,7 @@ import logging
 from typing import TYPE_CHECKING, Optional
 
 from twitchio.ext import commands
+from twitchio.ext.commands import MissingRequiredArgument
 
 from data_types.types_collection import ChatBotModuleType
 
@@ -48,7 +49,8 @@ class ChatBot(commands.Bot):
         self.load_module_by_type(ChatBotModuleType.BASE)
         self.load_module_by_type(ChatBotModuleType.MOD)
         self.load_module_by_type(ChatBotModuleType.CUSTOM)
-        self.load_module("chat_bot.test_commands")
+
+        self.setup_global_aliases()
 
     def load_module_by_type(self, module_type: ChatBotModuleType) -> None:
         if module_type in ChatBotModuleType and module_type.value not in self._modules:
@@ -65,6 +67,18 @@ class ChatBot(commands.Bot):
     def unload_all_modules(self) -> None:
         for module_type in ChatBotModuleType:
             self.unload_module_by_type(module_type)
+
+    def setup_global_aliases(self) -> None:
+        from chat_bot.custom_cog import CustomCog
+        for command_name, command in CustomCog.global_commands.items():
+            cog_command = self.get_command(command_name)
+            if cog_command is not None:
+                if cog_command.aliases is None:
+                    cog_command.aliases = command.aliases
+                else:
+                    cog_command.aliases.extend(command.aliases)
+                self.remove_command(command_name)
+                self.add_command(cog_command)
 
     async def start_chat_bot(self) -> None:
         log.info("Starting ChatBot")
@@ -90,6 +104,10 @@ class ChatBot(commands.Bot):
             if channel:
                 await channel.send(stream.config['chat-bot']['online-message'].format(bot_name=self.display_nick))
         log.info(f'{self.display_nick} online!')
+
+    async def event_command_error(self, ctx: commands.Context, error):
+        if isinstance(error, MissingRequiredArgument):
+            await ctx.channel.send(f"This command is missing required arguments")
 
     async def create_bot_tag_for_channel(self, channel: Channel) -> None:
         chatter = channel.get_chatter(self.display_nick)

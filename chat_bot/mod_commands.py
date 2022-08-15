@@ -23,34 +23,38 @@ class ModCommands(CustomCog):
     async def event_ready(self):
         log.info(f'Mod Commands loaded: {self.name}')
 
-    @commands.command(name="test")
-    async def test(self, ctx: commands.Context, notify_type: str = "test", name: str = None):
-        stream = self.Stream.get_stream(ctx.channel.name)
-        if ctx.command.name not in stream.config['chat-bot']['ignore-commands']:
-            if ctx.author.is_mod:
-                notification_type = NotificationType.FOLLOW
-                if name is None:
-                    name = "TestUser"
-                if notify_type in NotificationType.SUB.value:
-                    notification_type = NotificationType.SUB
-                elif notify_type in NotificationType.FOLLOW.value:
-                    notification_type = NotificationType.FOLLOW
-                stream.add_to_queue(name, notification_type)
-                await ctx.send(f"Test added to {notification_type.name}-queue")
-            else:
-                await ctx.send("You don't have permission to do this!")
+    @commands.command(name="add_alert")
+    async def add_alert(self, ctx: commands.Context, notify_type: str = "follow", name: str = None, *_, **__):
+        command = ctx.kwargs["command"]
+        if name is None:
+            name = "TestUser"
+        if notify_type in NotificationType.SUB.value:
+            notification_type = NotificationType.SUB
+        elif notify_type in NotificationType.FOLLOW.value:
+            notification_type = NotificationType.FOLLOW
+        else:
+            return
+        ctx.kwargs["stream"].add_to_queue(name, notification_type)
+        try:
+            message = command.get_message().format(**self.get_format_dicts(ctx))
+            await ctx.send(message)
+        except KeyError as e:
+            log.warning(f"Key {e} was not defined in {command.name}.cmd file. Please correct.")
 
     @commands.command(name="reload")
     async def reload(self, ctx: commands.Context):
-        if ctx.author.is_mod:
-            stream = self.Stream.get_stream(ctx.channel.name)
-            stream.load_resources_and_settings()
-            cog = self.bot.get_cog("CustomCommands")
-            if isinstance(cog, CustomCommands):
-                cog.load_custom_commands(stream)
-                await ctx.send("Stream settings reloaded!")
+        command = ctx.kwargs["command"]
+        ctx.kwargs["stream"].load_resources_and_settings()
+        cog = self.bot.get_cog("CustomCommands")
+        if isinstance(cog, CustomCommands):
+            cog.load_custom_commands(ctx.kwargs["stream"])
+            try:
+                message = command.get_message().format(**self.get_format_dicts(ctx))
+                await ctx.send(message)
+            except KeyError as e:
+                log.warning(f"Key {e} was not defined in {command.name}.cmd file. Please correct.")
 
-    @commands.command(name="ban_queue")
+    # @commands.command(name="ban_queue")
     async def ban_queue(self, ctx: commands.Context, option: str = None, value: Union[str, int] = None):
         if ctx.author.is_mod:
             stream = self.Stream.get_stream(ctx.channel.name)
@@ -76,59 +80,79 @@ class ModCommands(CustomCog):
                 await ctx.send(
                     "Valid options are 'list' to show queue, 'remove value' to remove 'value' from queue, 'clear' to clear the whole queue and 'ban' to ban everyone in queue.")
 
-    @commands.command(name="disable-cmd")
-    async def disable_command(self, ctx: commands.Context, cmd: str):
-        stream = self.Stream.get_stream(ctx.channel.name)
-        if ctx.author.is_mod and ctx.command.name not in stream.config['chat-bot']['ignore-commands'] or ctx.author.is_broadcaster:
-            if cmd.startswith(self.bot.prefix):
-                cmd = cmd[len(self.bot.prefix):]
-            command = self.bot.get_command(cmd)
-            if command is not None:
-                if command.name not in stream.config['chat-bot']['ignore-commands']:
-                    stream.config['chat-bot']['ignore-commands'].append(command.name)
-                    stream.save_settings()
-                    await ctx.send(f"command \"{cmd}\" disabled")
-                else:
-                    await ctx.send(f"command \"{cmd}\" is already disabled")
+    @commands.command(name="disable_command")
+    async def disable_command(self, ctx: commands.Context, cmd: str, *_, **__):
+        command = ctx.kwargs["command"]
+        stream = ctx.kwargs["stream"]
+        if cmd.startswith(self.bot.prefix):
+            cmd = cmd[len(self.bot.prefix):]
+        target_command = self.get_command(cmd, stream)
+        if target_command is not None:
+            if cmd not in stream.config['chat-bot']['ignore-commands']:
+                stream.config['chat-bot']['ignore-commands'].append(cmd)
+                stream.save_settings()
+                message = command.get_message("success")
             else:
-                await ctx.send(f"command \"{cmd}\" not found!")
+                message = command.get_message("fail")
+        else:
+            message = command.get_message("not_found")
+        try:
+            message = message.format(**self.get_format_dicts(ctx))
+            await ctx.send(message)
+        except KeyError as e:
+            log.warning(f"Key {e} was not defined in {command.name}.cmd file. Please correct.")
 
-    @commands.command(name="enable-cmd")
-    async def enable_command(self, ctx: commands.Context, cmd: str):
-        stream = self.Stream.get_stream(ctx.channel.name)
-        if ctx.author.is_mod and ctx.command.name not in stream.config['chat-bot']['ignore-commands'] or ctx.author.is_broadcaster:
-            if cmd.startswith(self.bot.prefix):
-                cmd = cmd[len(self.bot.prefix):]
-            command = self.bot.get_command(cmd)
-            if command is not None:
-                if command.name in stream.config['chat-bot']['ignore-commands']:
-                    stream.config['chat-bot']['ignore-commands'].remove(command.name)
-                    stream.save_settings()
-                    await ctx.send(f"command \"{cmd}\" enabled")
-                else:
-                    await ctx.send(f"command \"{cmd}\" is already enabled")
+    @commands.command(name="enable_command")
+    async def enable_command(self, ctx: commands.Context, cmd: str, *_, **__):
+        command = ctx.kwargs["command"]
+        stream = ctx.kwargs["stream"]
+        if cmd.startswith(self.bot.prefix):
+            cmd = cmd[len(self.bot.prefix):]
+        target_command = self.get_command(cmd, stream)
+        if target_command:
+            if cmd in stream.config['chat-bot']['ignore-commands']:
+                stream.config['chat-bot']['ignore-commands'].remove(cmd)
+                stream.save_settings()
+                message = command.get_message("success")
             else:
-                await ctx.send(f"command \"{cmd}\" not found!")
+                message = command.get_message("fail")
+        else:
+            message = command.get_message("not_found")
+        try:
+            message = message.format(**self.get_format_dicts(ctx))
+            await ctx.send(message)
+        except KeyError as e:
+            log.warning(f"Key {e} was not defined in {command.name}.cmd file. Please correct.")
 
-    @commands.command(name="set-title")
-    async def set_title(self, ctx: commands.Context, title: str):
-        stream = self.Stream.get_stream(ctx.channel.name)
-        if ctx.author.is_mod and ctx.command.name not in stream.config['chat-bot']['ignore-commands'] or ctx.author.is_broadcaster:
-            if stream.config["chat-bot"]["enable-channel-edit-commands"] and stream.get_twitch_user_api() is not None:
-                if stream.get_twitch_user_api().set_title(stream, title):
-                    await ctx.send(f"title set to \"{title}\" by {ctx.author.display_name}")
-                else:
-                    await ctx.send("could not set title")
+    @commands.command(name="set_title")
+    async def set_title(self, ctx: commands.Context, title: str, *_, **__):
+        command = ctx.kwargs["command"]
+        stream = ctx.kwargs["stream"]
+        if stream.config["chat-bot"]["enable-channel-edit-commands"] and stream.get_twitch_user_api() is not None:
+            if stream.get_twitch_user_api().set_title(stream, title):
+                message = command.get_message("success")
+            else:
+                message = command.get_message("fail")
+            try:
+                message = message.format(**self.get_format_dicts(ctx))
+                await ctx.send(message)
+            except KeyError as e:
+                log.warning(f"Key {e} was not defined in {command.name}.cmd file. Please correct.")
 
-    @commands.command(name="set-game")
-    async def set_game(self, ctx: commands.Context, game: str):
-        stream = self.Stream.get_stream(ctx.channel.name)
-        if ctx.author.is_mod and ctx.command.name not in stream.config['chat-bot']['ignore-commands'] or ctx.author.is_broadcaster:
-            if stream.config["chat-bot"]["enable-channel-edit-commands"] and stream.get_twitch_user_api() is not None:
-                if stream.get_twitch_user_api().set_game(stream, game):
-                    await ctx.send(f"game set to \"{game}\" by {ctx.author.display_name}")
-                else:
-                    await ctx.send("could not set game")
+    @commands.command(name="set_game")
+    async def set_game(self, ctx: commands.Context, game: str, *_, **__):
+        command = ctx.kwargs["command"]
+        stream = ctx.kwargs["stream"]
+        if stream.config["chat-bot"]["enable-channel-edit-commands"] and stream.get_twitch_user_api() is not None:
+            if stream.get_twitch_user_api().set_game(stream, game):
+                message = command.get_message("success")
+            else:
+                message = command.get_message("fail")
+            try:
+                message = message.format(**self.get_format_dicts(ctx))
+                await ctx.send(message)
+            except KeyError as e:
+                log.warning(f"Key {e} was not defined in {command.name}.cmd file. Please correct.")
 
 
 def prepare(bot: ChatBot):

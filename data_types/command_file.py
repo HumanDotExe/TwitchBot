@@ -40,6 +40,7 @@ class CommandConfig:
     __schema: Schema = Schema(
         {
             'name': And(str),
+            Optional('aliases', default=[]): Or(str, list),
             Optional('rights', default={'user': True}): {
                 Optional('broadcaster', default=False): And(bool),
                 Optional('moderator', default=False): And(bool),
@@ -50,6 +51,9 @@ class CommandConfig:
                 'message': Or({
                     Optional('online', default=None): Or(str, list, None),
                     Optional('offline', default=None): Or(str, list, None),
+                    Optional('success', default=None): Or(str, list, None),
+                    Optional('fail', default=None): Or(str, list, None),
+                    Optional('not_found', default=None): Or(str, list, None)
                 }, str, list),
             },
             Optional('help', default=None): Or(str, None),

@@ -48,7 +48,8 @@ class CustomCog(commands.Cog):
         for command_file in command_files:
             try:
                 command = Command(command_file)
-                cls.global_commands[command.name] = command
+                for name in command.names:
+                    cls.global_commands[name] = command
             except ValidationException as e:
                 log.warning(f"Problem loading command {command_file.name}: {e}")
 
@@ -61,6 +62,14 @@ class CustomCog(commands.Cog):
             return cls.global_commands[command_name]
         return command
 
+    @classmethod
+    def is_command_enabled(cls, command_name: str, stream: Stream) -> bool:
+        if command_name in stream.config['chat-bot']['ignore-commands']:
+            return False
+        if command_name in stream.commands.keys():
+            return True
+        return command_name in cls.global_commands.keys()
+
     def __init__(self, bot: chat_bot.ChatBot) -> None:
         self.bot: chat_bot.ChatBot = bot
 
@@ -72,17 +81,39 @@ class CustomCog(commands.Cog):
         self.bot.remove_command(command_name)
         self._commands.pop(command_name)
 
+    async def cog_check(self, ctx: commands.Context) -> bool:
+        stream = self.Stream.get_stream(ctx.channel.name)
+        if stream is None:
+            return False
+        command = self.get_command(ctx.command.name, stream)
+        if command is None:
+            return False
+        calling_name = self.get_calling_name(command, ctx.message.content, ctx.prefix)
+        if self.is_command_enabled(calling_name, stream) and self.has_user_right(ctx, command):
+            ctx.kwargs["stream"] = stream
+            ctx.kwargs["command"] = command
+            return True
+        return False
+
+    @staticmethod
+    def get_calling_name(command: Command, message: str, prefix: str) -> str:
+        message = message.replace(prefix, "", 1)
+        for name in command.names:
+            if message.startswith(name):
+                return name
+        log.error("there can't be a command that was executed but does not match any name")
+
     @staticmethod
     def has_user_right(ctx: commands.Context, command: Command) -> bool:
         return command.user_command or command.moderator_command and ctx.author.is_mod or command.broadcaster_command and ctx.author.is_broadcaster
 
     @staticmethod
-    def get_format_dicts(command: Command, ctx: commands.Context, stream: Stream, *args) -> dict:
+    def get_format_dicts(ctx: commands.Context) -> dict:
         return {
-            **CustomCog.__create_param_dict(command, ctx.author.display_name, *args),
-            **CustomCog.__create_stream_dict(stream),
+            **CustomCog.__create_param_dict(ctx),
+            **CustomCog.__create_stream_dict(ctx.kwargs["stream"]),
             **CustomCog.__create_context_dict(ctx),
-            **CustomCog.__create_random_dict(command)
+            **CustomCog.__create_random_dict(ctx.kwargs["command"])
         }
 
     @staticmethod
@@ -109,14 +140,15 @@ class CustomCog(commands.Cog):
         return stream_param_dict
 
     @staticmethod
-    def __create_param_dict(command: Command, user: str,  *args) -> dict:
+    def __create_param_dict(ctx: commands.Context) -> dict:
         param_dict = {}
+        command = ctx.kwargs["command"]
         for number in range(0, command.parameter_count):
             param = "param" + str(number)
-            if len(args) > number:
-                param_dict[param] = args[number]
+            if len(ctx.args) > number:
+                param_dict[param] = ctx.args[number]
             elif command.replace_param_with_caller(param):
-                param_dict[param] = user
+                param_dict[param] = ctx.author.display_name
             elif not command.is_param_required(param):
                 param_dict[param] = ""
         return param_dict

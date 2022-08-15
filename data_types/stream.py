@@ -93,7 +93,7 @@ class Stream:
             if self.config['chat-bot']['save-chatlog']:
                 self.paths["chatlog"] = self.paths["stream"] / "logs"
                 self.paths["chatlog"].mkdir(parents=True, exist_ok=True)
-            self.__setup_custom_commands()
+            self.__setup_commands()
 
     def save_settings(self) -> None:
         log.info(f"Saving Stream settings for {self.streamer}")
@@ -118,13 +118,14 @@ class Stream:
             if sound_name:
                 self.__notifications[notification_type].set_sound(sound_name, self.paths["resources"])
 
-    def __setup_custom_commands(self) -> None:
+    def __setup_commands(self) -> None:
         from data_types.command import Command
         command_files = self.paths["resources"].glob('**/*' + self.__command_suffix)
         for command_file in command_files:
             try:
                 command = Command(command_file)
-                self.commands[command.name] = command
+                for name in command.names:
+                    self.commands[name] = command
             except ValidationException as e:
                 log.warning(f"Problem loading command {command_file.name}: {e}")
 
@@ -223,7 +224,7 @@ class Stream:
         return None
 
     def get_custom_commands(self) -> list[str]:
-        return [x for x in self.commands.keys() if self.commands[x].is_custom_command]
+        return [x.name for x in self.commands.values() if x.is_custom_command]
 
     @property
     def beatsaber_websocket(self) -> WebSocketResponse | None:
