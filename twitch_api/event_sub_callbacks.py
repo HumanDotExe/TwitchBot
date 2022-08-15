@@ -12,21 +12,25 @@ class EventSubCallbacks:
 
     @staticmethod
     async def on_channel_update(data: dict):
+        log.info(f"on_channel_update callback called: data: {data}")
         stream = Stream.get_stream(data['event']['broadcaster_user_name'])
         stream.stream_info_changed(data['event']['title'], data['event']['category_name'], data['event']['is_mature'], data['event']['language'])
 
     @staticmethod
     async def on_stream_online(data: dict):
+        log.info(f"on_stream_online callback called: data: {data}")
         stream = Stream.get_stream(data['event']['broadcaster_user_name'])
         stream.stream_started(data['event']['started_at'])
 
     @staticmethod
     async def on_stream_offline(data: dict):
+        log.info(f"on_stream_offline callback called: data: {data}")
         stream = Stream.get_stream(data['event']['broadcaster_user_name'])
         stream.stream_ended()
 
     @staticmethod
     async def on_channel_follow(data: dict):
+        log.info(f"on_channel_follow callback called: data: {data}")
         stream = Stream.get_stream(data['event']['broadcaster_user_name'])
         stream.add_to_queue(data['event']['user_name'], NotificationType.FOLLOW)
 
