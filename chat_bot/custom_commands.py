@@ -53,12 +53,16 @@ class CustomCommands(CustomCog):
 
     @classmethod
     async def display_command(cls, ctx: commands.Context, *_, **__):
-        command = ctx.kwargs["command"]
-        try:
-            message = command.get_message().format(**cls.get_format_dicts(ctx))
-            await ctx.send(message)
-        except KeyError as e:
-            log.warning(f"Key {e} was not defined in {command.name}.cmd file. Please correct.")
+        stream = cls.Stream.get_stream(ctx.channel.name)
+        command = cls.get_command(ctx.command.name, stream)
+        if command:
+            ctx.kwargs["stream"] = stream
+            ctx.kwargs["command"] = command
+            try:
+                message = command.get_message().format(**cls.get_format_dicts(ctx))
+                await ctx.send(message)
+            except KeyError as e:
+                log.warning(f"Key {e} was not defined in {command.name}.cmd file. Please correct.")
 
 
 def prepare(bot: ChatBot):
