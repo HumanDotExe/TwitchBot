@@ -85,6 +85,14 @@ class PerStreamConfig:
     """
 
     @classmethod
+    def get_schema(cls) -> Schema:
+        return cls.__schema
+
+    @classmethod
+    def get_fallback(cls) -> str:
+        return cls.__fallback
+
+    @classmethod
     def load_config(cls, config_file: Path) -> dict:
         log.info("Reading Config")
         with open(config_file, 'r') as file:

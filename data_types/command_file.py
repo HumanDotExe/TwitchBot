@@ -64,6 +64,10 @@ class CommandConfig:
     )
 
     @classmethod
+    def get_schema(cls) -> Schema:
+        return cls.__schema
+
+    @classmethod
     def load_command_file(cls, command_file: Path) -> dict:
         log.info(f"Reading Command File {command_file.name}")
         with open(command_file, 'r') as file:
