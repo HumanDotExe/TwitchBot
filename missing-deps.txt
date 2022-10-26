@@ -1,0 +1,6 @@
+multidict
+attrs
+yarl
+async_timeout
+charset_normalizer
+aiosignal
