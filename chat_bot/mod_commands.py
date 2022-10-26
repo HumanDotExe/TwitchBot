@@ -42,7 +42,7 @@ class ModCommands(CustomCog):
             log.warning(f"Key {e} was not defined in {command.name}.cmd file. Please correct.")
 
     @commands.command(name="reload")
-    async def reload(self, ctx: commands.Context):
+    async def reload(self, ctx: commands.Context, *_, **__):
         command = ctx.kwargs["command"]
         ctx.kwargs["stream"].load_resources_and_settings()
         cog = self.bot.get_cog("CustomCommands")

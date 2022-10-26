@@ -108,6 +108,10 @@ class ChatBot(commands.Bot):
     async def event_command_error(self, ctx: commands.Context, error):
         if isinstance(error, MissingRequiredArgument):
             await ctx.channel.send(f"This command is missing required arguments")
+        elif isinstance(error, TypeError):
+            log.warning(f"TypeError: {error.args[0]}")
+        else:
+            log.warning(f"UnknownError: {error.args[0]}")
 
     async def create_bot_tag_for_channel(self, channel: Channel) -> None:
         chatter = channel.get_chatter(self.display_nick)
