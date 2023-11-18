@@ -1,1 +1,5 @@
 .idea/
+/secrets.ini
+/streams/
+/streams/!default.yaml
+/debug/
