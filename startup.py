@@ -54,6 +54,5 @@ if __name__ == "__main__":
     loop = asyncio.new_event_loop()
     signal.signal(signal.SIGINT, lambda x, y: asyncio.ensure_future(exit_handler(x, y, loop)))
     signal.signal(signal.SIGTERM, lambda x, y: asyncio.ensure_future(exit_handler(x, y, loop)))
-    signal.signal(signal.CTRL_C_EVENT, lambda x, y: asyncio.ensure_future(exit_handler(x, y, loop)))
     loop.run_forever()
 
