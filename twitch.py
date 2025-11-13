@@ -42,7 +42,7 @@ def startup():
     TwitchAPI.set_twitch_api(TwitchAPI(config['APP']['CLIENT_ID'], config['APP']['CLIENT_SECRET'], config['USER']['refresh_token'], config['GENERAL']['MONITOR_STREAMS'].split(" "), base_path))
     if not beatsaber_exclusive:
         TwitchAPI.get_twitch_api().setup_event_subs(config['GENERAL']['TWITCH_CALLBACK_URL'], config['GENERAL'].getint('TWITCH_CALLBACK_PORT'))
-        TwitchAPI.get_twitch_api().setup_pubsub(TwitchAPI.get_twitch_api().get_user_id_by_name(config['BOT']['NICK']))
+        # TwitchAPI.get_twitch_api().setup_pubsub(TwitchAPI.get_twitch_api().get_user_id_by_name(config['BOT']['NICK']))
         ChatMessage.set_global_emotes(TwitchAPI.get_twitch_api().get_global_chat_emotes())
         ChatMessage.set_global_badges(TwitchAPI.get_twitch_api().get_global_chat_badges())
     else:

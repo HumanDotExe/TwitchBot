@@ -162,9 +162,9 @@ class TwitchAPI:
                 stream.set_callback_id(
                     self._event_sub_hook.listen_channel_update(stream.user_id, EventSubCallbacks.on_channel_update),
                     EventSubType.CHANNEL_UPDATE)
-                stream.set_callback_id(
-                    self._event_sub_hook.listen_channel_follow(stream.user_id, EventSubCallbacks.on_channel_follow),
-                    EventSubType.CHANNEL_FOLLOW)
+                # stream.set_callback_id(
+                #     self._event_sub_hook.listen_channel_follow(stream.user_id, EventSubCallbacks.on_channel_follow),
+                #     EventSubType.CHANNEL_FOLLOW)
             except EventSubSubscriptionError:
                 log.warning(f"Something went wrong here: No auth for {stream.streamer}.")
             except EventSubSubscriptionTimeout:
