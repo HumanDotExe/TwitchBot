@@ -38,6 +38,7 @@ class EventSubCallbacks:
     async def on_ban(data: dict):
         log.debug("Ban callback")
         stream = Stream.get_stream(data['event']['broadcaster_user_name'])
+        stream.delete_all_messages_by_user(data['data']['target_user_login'])
         if data['event']['is_permanent']:
             ban_user = data['event']['user_login']
             reason = f"banned in channel {stream.streamer}"
