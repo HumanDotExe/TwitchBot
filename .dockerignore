@@ -1,0 +1,14 @@
+streams
+debug
+.git
+.idea
+misc
+__pychache__
+.gitignore
+README.md
+TODO.md
+setup.py
+secrets.ini
+.dockerignore
+Dockerfile
+docker-compose.yaml

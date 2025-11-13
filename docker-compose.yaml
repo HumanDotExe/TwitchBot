@@ -1,0 +1,16 @@
+services:
+  twitch-bot:
+    container_name: twitch-bot
+    restart: unless-stopped
+    build:
+      network: host
+      dockerfile: ./Dockerfile
+    environment:
+      - TZ=Europe/Berlin
+    volumes:
+      - './streams/:/TwitchBot/streams/'
+      - './secrets.ini:/TwitchBot/secrets.ini'
+      - './debug/:/TwitchBot/debug/'
+    ports:
+      - "127.0.0.1:9996:9996"
+      - "127.0.0.1:9997:9997"
