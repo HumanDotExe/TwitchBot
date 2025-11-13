@@ -48,7 +48,7 @@ class TwitchAPI:
                  base_path: Path, user_auth_scope: Optional[list[AuthScope]] = None, app_auth_scope: Optional[list[AuthScope]] = None) -> None:
         log.debug("Twitch API Object created")
         if user_auth_scope is None:
-            user_auth_scope = [AuthScope.CHANNEL_MODERATE, AuthScope.MODERATOR_MANAGE_BANNED_USERS]
+            user_auth_scope = [AuthScope.CHANNEL_MODERATE, AuthScope.MODERATOR_MANAGE_BANNED_USERS, AuthScope.CHAT_READ]
         if app_auth_scope is None:
             app_auth_scope = [AuthScope.CHANNEL_MODERATE]
         self._client_id: str = client_id
@@ -178,6 +178,15 @@ class TwitchAPI:
                     EventSubType.CHANNEL_UNBAN)
             except EventSubSubscriptionError:
                 log.warning(f"{stream.streamer} does not have the app authorized.")
+            except EventSubSubscriptionTimeout:
+                log.error(f"EventSub timed out.")
+            try:
+                stream.set_callback_id(
+                    self._event_sub_hook._subscribe("channel.chat.clear", "1", {'broadcaster_user_id': stream.user_id}, EventSubCallbacks.on_chat_clear),
+                    EventSubType.CHAT_CLEAR
+                )
+            except EventSubSubscriptionError:
+                log.warning(f"{stream.streamer} does not have permissions for clear chat.")
             except EventSubSubscriptionTimeout:
                 log.error(f"EventSub timed out.")
 

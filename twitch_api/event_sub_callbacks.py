@@ -35,6 +35,12 @@ class EventSubCallbacks:
         stream.add_to_queue(data['event']['user_name'], NotificationType.FOLLOW)
 
     @staticmethod
+    async def on_chat_clear(data: dict):
+        log.info(f"on_chat_clear callback called: data: {data}")
+        stream = Stream.get_stream(data['event']['broadcaster_user_name'])
+        stream.clear_chat()
+
+    @staticmethod
     async def on_ban(data: dict):
         log.debug("Ban callback")
         stream = Stream.get_stream(data['event']['broadcaster_user_name'])
