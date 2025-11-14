@@ -154,6 +154,8 @@ class TwitchAPI:
         self._event_sub_hook.unsubscribe_all()
         self._event_sub_hook.start()
 
+        bot_user_id = self.get_user_id_by_name(TwitchBotConfig.get_config()["BOT"]["NICK"])
+
         for stream in Stream.get_streams():
             try:
                 stream.set_callback_id(
@@ -185,8 +187,12 @@ class TwitchAPI:
                 log.error(f"EventSub timed out.")
             try:
                 stream.set_callback_id(
-                    self._event_sub_hook._subscribe("channel.chat.clear", "1", {'broadcaster_user_id': stream.user_id, "user_id": self.get_user_id_by_name(TwitchBotConfig.get_config()["BOT"]["NICK"])}, EventSubCallbacks.on_chat_clear),
+                    self._event_sub_hook._subscribe("channel.chat.clear", "1", {'broadcaster_user_id': stream.user_id, "user_id": bot_user_id}, EventSubCallbacks.on_chat_clear),
                     EventSubType.CHAT_CLEAR
+                )
+                stream.set_callback_id(
+                    self._event_sub_hook._subscribe("channel.chat.clear_user_messages", "1", {'broadcaster_user_id': stream.user_id, "user_id": bot_user_id}, EventSubCallbacks.on_chat_clear_user),
+                    EventSubType.CHAT_CLEAR_USER
                 )
             except EventSubSubscriptionError as e:
                 log.error(e)

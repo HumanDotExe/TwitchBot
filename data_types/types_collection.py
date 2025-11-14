@@ -52,6 +52,7 @@ class EventSubType(Enum):
     USER_AUTHORIZATION_REVOKE = 36
     USER_UPDATE = 37
     CHAT_CLEAR = 38
+    CHAT_CLEAR_USER = 39
 
 
 class PubSubType(Enum):

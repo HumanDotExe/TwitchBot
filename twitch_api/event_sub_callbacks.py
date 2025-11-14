@@ -36,17 +36,21 @@ class EventSubCallbacks:
 
     @staticmethod
     async def on_chat_clear(data: dict):
-        log.info(f"on_chat_clear callback called: data: {data}")
         stream = Stream.get_stream(data['event']['broadcaster_user_name'])
         stream.clear_chat()
+
+    @staticmethod
+    async def on_chat_clear_user(data: dict):
+        stream = Stream.get_stream(data['event']['broadcaster_user_name'])
+        stream.delete_all_messages_by_user(data['event']['target_user_name'])
 
     @staticmethod
     async def on_ban(data: dict):
         log.debug("Ban callback")
         stream = Stream.get_stream(data['event']['broadcaster_user_name'])
-        stream.delete_all_messages_by_user(data['data']['target_user_login'])
+        ban_user = data['event']['user_name']
+        stream.delete_all_messages_by_user(ban_user)
         if data['event']['is_permanent']:
-            ban_user = data['event']['user_login']
             reason = f"banned in channel {stream.streamer}"
             if data['event']['reason'] != "":
                 reason = f"{reason}: {data['event']['reason']}"
