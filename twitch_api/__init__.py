@@ -48,7 +48,7 @@ class TwitchAPI:
                  base_path: Path, user_auth_scope: Optional[list[AuthScope]] = None, app_auth_scope: Optional[list[AuthScope]] = None) -> None:
         log.debug("Twitch API Object created")
 
-        log.info(AuthScope.USER_BOT)
+        log.info([s.value for s in [AuthScope.USER_BOT]])
 
         if user_auth_scope is None:
             user_auth_scope = [AuthScope.CHANNEL_MODERATE, AuthScope.MODERATOR_MANAGE_BANNED_USERS, AuthScope.CHAT_READ, AuthScope.USER_BOT]
@@ -188,7 +188,8 @@ class TwitchAPI:
                     self._event_sub_hook._subscribe("channel.chat.clear", "1", {'broadcaster_user_id': stream.user_id, "user_id": self.get_user_id_by_name(TwitchBotConfig.get_config()["BOT"]["NICK"])}, EventSubCallbacks.on_chat_clear),
                     EventSubType.CHAT_CLEAR
                 )
-            except EventSubSubscriptionError:
+            except EventSubSubscriptionError as e:
+                log.error(e)
                 log.warning(f"{stream.streamer} does not have permissions for clear chat.")
             except EventSubSubscriptionTimeout:
                 log.error(f"EventSub timed out.")
