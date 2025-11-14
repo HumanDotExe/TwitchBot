@@ -12,8 +12,9 @@ from chat_bot import ChatBot
 from data_types.chat_message import ChatMessage
 from data_types.types_collection import ChatBotModuleType
 from data_types.twitch_bot_config import TwitchBotConfig
-from twitch_api import TwitchAPI
+from twitch_api import TwitchAPI, AuthScope
 from webserver import Webserver
+from aenum import extend_enum
 
 if TYPE_CHECKING:
     from types import FrameType
@@ -31,6 +32,9 @@ signal_to_name = dict((k, v) for v, k in reversed(sorted(signal.__dict__.items()
 
 
 def startup():
+    log.info("Extending AuthScope by user:bot")
+    extend_enum(AuthScope, 'USER_BOT', 'user:bot')
+
     log.info("Reading config")
     config = TwitchBotConfig(pathlib.Path('secrets.ini'))
     TwitchBotConfig.set_config(config)
