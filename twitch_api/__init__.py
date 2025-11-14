@@ -48,10 +48,10 @@ class TwitchAPI:
                  base_path: Path, user_auth_scope: Optional[list[AuthScope]] = None, app_auth_scope: Optional[list[AuthScope]] = None) -> None:
         log.debug("Twitch API Object created")
 
-        log.info([s.value for s in [AuthScope.USER_BOT]])
+        log.info([s.value for s in [AuthScope.USER_BOT, AuthScope.USER_READ_CHAT]])
 
         if user_auth_scope is None:
-            user_auth_scope = [AuthScope.CHANNEL_MODERATE, AuthScope.MODERATOR_MANAGE_BANNED_USERS, AuthScope.CHAT_READ, AuthScope.USER_BOT]
+            user_auth_scope = [AuthScope.CHANNEL_MODERATE, AuthScope.MODERATOR_MANAGE_BANNED_USERS, AuthScope.CHAT_READ, AuthScope.USER_BOT, AuthScope.USER_READ_CHAT]
         if app_auth_scope is None:
             app_auth_scope = [AuthScope.CHANNEL_MODERATE]
         self._client_id: str = client_id

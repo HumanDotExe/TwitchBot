@@ -32,8 +32,9 @@ signal_to_name = dict((k, v) for v, k in reversed(sorted(signal.__dict__.items()
 
 
 def startup():
-    log.info("Extending AuthScope by user:bot")
+    log.info("Extending AuthScope by user:bot and user:read:chat")
     extend_enum(AuthScope, 'USER_BOT', 'user:bot')
+    extend_enum(AuthScope, 'USER_READ_CHAT', 'user:read:chat')
 
     log.info("Reading config")
     config = TwitchBotConfig(pathlib.Path('secrets.ini'))
